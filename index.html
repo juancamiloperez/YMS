@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YMS Pro v5 — Supabase</title>
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- SheetJS para exportar/importar Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Iconos -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+:root{
+  --ink:#0F172A;--ink2:#334155;--ink3:#64748B;--ink4:#94A3B8;
+  --surface:#FFFFFF;--surface2:#F8FAFC;--surface3:#F1F5F9;
+  --border:#E2E8F0;--border2:#CBD5E1;
+  --blue:#2563EB;--blue-l:#EFF6FF;--blue-d:#1D4ED8;
+  --green:#059669;--green-l:#ECFDF5;--green-d:#047857;
+  --amber:#D97706;--amber-l:#FFFBEB;
+  --red:#DC2626;--red-l:#FEF2F2;
+  --purple:#7C3AED;--purple-l:#F5F3FF;
+  --r6:6px;--r8:8px;--r10:10px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--surface2);color:var(--ink);font-size:13px;line-height:1.5}
+button,input,select,textarea{font-family:inherit}button{cursor:pointer}input,select,textarea{cursor:text}
+
+/* ── PANTALLAS ── */
+.scr{display:none}.scr.on{display:flex;flex-direction:column;min-height:100vh}
+
+/* ── CONFIG SUPABASE ── */
+.cfg-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#0F172A,#1E3A5F,#0F172A)}
+.cfg-box{background:#fff;border-radius:16px;padding:36px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.cfg-icon{width:56px;height:56px;background:linear-gradient(135deg,#2563EB,#7C3AED);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:28px}
+.cfg-title{font-size:20px;font-weight:700;letter-spacing:-.4px;margin-bottom:4px}
+.cfg-sub{font-size:12px;color:var(--ink3);margin-bottom:20px}
+.cfg-note{background:var(--blue-l);border:1px solid #BFDBFE;border-radius:8px;padding:10px 12px;font-size:11px;color:var(--blue-d);margin-bottom:16px;line-height:1.6}
+.cfg-note code{background:rgba(37,99,235,.1);padding:1px 5px;border-radius:3px;font-family:monospace}
+
+/* ── LOGIN ── */
+.lw{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#0F172A,#1E3A5F,#0F172A)}
+.lb{background:#fff;border-radius:16px;padding:36px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.ll{text-align:center;margin-bottom:28px}
+.ll-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--blue),#7C3AED);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:28px}
+.ll-brand{font-size:22px;font-weight:700;letter-spacing:-.5px}.ll-sub{font-size:12px;color:var(--ink3);margin-top:3px}
+.tabs{display:flex;background:var(--surface2);border-radius:var(--r8);padding:3px;margin-bottom:22px;gap:3px}
+.tab{flex:1;padding:8px;border:none;border-radius:6px;font-size:12px;font-weight:500;color:var(--ink3);background:transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.tab.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+.fpanel{display:none}.fpanel.on{display:block}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em}
+.fc{width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--r8);background:#fff;color:var(--ink);font-size:13px;outline:none;transition:all .15s}
+.fc:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}.fc.err{border-color:var(--red)}
+.em{font-size:11px;color:var(--red);margin-top:4px;display:none}.em.on{display:block}
+.bfull{width:100%;padding:11px;border-radius:var(--r8);border:none;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s}
+.b-prov{background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff}.b-prov:hover{opacity:.9}
+.b-oper{background:linear-gradient(135deg,var(--blue),var(--blue-d));color:#fff}.b-oper:hover{opacity:.9}
+.b-out{border:1.5px solid var(--border2);background:#fff;color:var(--ink2);margin-top:8px}.b-out:hover{background:var(--surface2)}
+.div-or{display:flex;align-items:center;gap:8px;margin:16px 0;font-size:11px;color:var(--ink4)}.div-or::before,.div-or::after{content:'';flex:1;height:1px;background:var(--border)}
+.hint{background:var(--surface2);border-radius:var(--r8);padding:10px 12px;font-size:11px;color:var(--ink3);margin-top:14px;border:1px solid var(--border)}.hint b{color:var(--ink2);font-weight:600}
+.lnk{background:none;border:none;color:var(--blue);font-size:12px;text-decoration:underline;padding:0}
+
+/* ── APP SHELL ── */
+.app{display:flex;height:100vh}
+.sb{width:214px;background:var(--ink);display:flex;flex-direction:column;flex-shrink:0}
+.sb-top{padding:16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo{display:flex;align-items:center;gap:10px}
+.sb-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--blue),#7C3AED);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sb-logo-txt{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.3px}.sb-logo-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+.sb-nav{flex:1;padding:8px 0;overflow-y:auto}
+.sb-sec{padding:14px 14px 3px;font-size:9px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:12px;color:rgba(255,255,255,.55);border-left:2.5px solid transparent;transition:all .12s;border-radius:0 6px 6px 0;margin:1px 6px 1px 0;cursor:pointer}
+.ni:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
+.ni.on{background:rgba(37,99,235,.25);color:#fff;border-left-color:var(--blue);font-weight:500}
+.ni i{font-size:14px;flex-shrink:0;opacity:.8}.ni.on i{opacity:1}
+.sb-user{padding:12px 14px;border-top:1px solid rgba(255,255,255,.08)}
+.su-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.su-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.av-p{background:rgba(5,150,105,.3);color:#34D399}.av-o{background:rgba(37,99,235,.3);color:#60A5FA}.av-a{background:rgba(124,58,237,.3);color:#A78BFA}
+.su-name{font-size:12px;font-weight:500;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.su-role{font-size:10px;color:rgba(255,255,255,.4)}
+.lo-btn{width:100%;padding:6px 10px;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:transparent;color:rgba(255,255,255,.5);font-size:11px;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s}
+.lo-btn:hover{background:rgba(220,38,38,.15);color:#FCA5A5;border-color:rgba(220,38,38,.3)}
+.mn{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0}
+.tb{background:#fff;border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10}
+.tb-title{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.tb-r{display:flex;align-items:center;gap:10px}
+.rpill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.rp-p{background:var(--green-l);color:var(--green-d)}.rp-o{background:var(--blue-l);color:var(--blue-d)}.rp-a{background:var(--purple-l);color:var(--purple)}
+.clock{font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.mpg{padding:20px;flex:1}
+
+/* ── CARDS / GRIDS ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r10);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.ct{font-size:13px;font-weight:600;letter-spacing:-.2px}.ct-sub{font-size:11px;color:var(--ink3);font-weight:400;margin-left:6px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* ── MÉTRICAS ── */
+.metric{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r8);padding:14px 16px}
+.ml{font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.mv{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1}.ms{font-size:11px;color:var(--ink3);margin-top:4px}
+.m-blue .mv{color:var(--blue)}.m-green .mv{color:var(--green)}.m-amber .mv{color:var(--amber)}.m-red .mv{color:var(--red)}
+
+/* ── FORMS ── */
+.sep{font-size:11px;font-weight:600;color:var(--ink3);padding-bottom:8px;border-bottom:1.5px solid var(--border);margin:18px 0 12px;text-transform:uppercase;letter-spacing:.05em}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--r8);border:1.5px solid var(--border2);background:#fff;color:var(--ink2);font-size:12px;font-weight:600;transition:all .12s;cursor:pointer}
+.btn:hover{background:var(--surface2)}.bp{background:var(--blue);color:#fff;border-color:var(--blue)}.bp:hover{background:var(--blue-d)}
+.bs{background:var(--green);color:#fff;border-color:var(--green)}.bs:hover{background:var(--green-d)}
+.bd{background:var(--red);color:#fff;border-color:var(--red)}.bsm{padding:4px 10px;font-size:11px}
+.al{padding:8px 12px;border-radius:var(--r6);font-size:12px;margin-bottom:12px;display:flex;align-items:center;gap:7px;font-weight:500}
+.aok{background:var(--green-l);color:var(--green-d)}.aerr{background:var(--red-l);color:var(--red)}.awarn{background:var(--amber-l);color:var(--amber)}.ainfo{background:var(--blue-l);color:var(--blue-d)}
+.loading-box{display:flex;align-items:center;gap:10px;padding:16px;color:var(--ink3)}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── BADGES ── */
+.bdg{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.b-sch{background:var(--surface3);color:var(--ink3)}.b-wai{background:#FEF3C7;color:#92400E}.b-loa{background:#DBEAFE;color:#1E40AF}
+.b-don{background:var(--green-l);color:var(--green-d)}.b-mis{background:var(--red-l);color:var(--red)}
+.b-ok{background:var(--green-l);color:var(--green-d)}.b-lt{background:#FEF3C7;color:#92400E}.b-nd{background:var(--red-l);color:var(--red)}
+
+/* ── TABLES ── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:9px 10px;font-size:10px;font-weight:700;color:var(--ink3);border-bottom:1.5px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;background:var(--surface2)}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}tr:hover td{background:var(--blue-l)}
+
+/* ── MUELLES ── */
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mc{border:1.5px solid var(--border);border-radius:var(--r8);padding:12px;text-align:center}
+.mc-av{background:var(--green-l);border-color:#A7F3D0}.mc-oc{background:var(--red-l);border-color:#FECACA}
+.mc-nm{font-weight:700;font-size:12px;margin-bottom:3px}.mc-st{font-size:10px;color:var(--ink3)}
+
+/* ── CHARTS ── */
+.cbar{display:flex;align-items:flex-end;gap:4px;height:90px;padding-top:8px}
+.cbc{flex:1;border-radius:3px 3px 0 0;min-height:4px}.cbc:hover{opacity:.8}
+.cblbl{display:flex;gap:4px;margin-top:5px}.cblbl span{flex:1;font-size:9px;color:var(--ink3);text-align:center}
+
+/* ── SEMÁFORO ── */
+.s-ok{background:var(--green-l);color:var(--green-d);border:1px solid #A7F3D0}
+.s-warn{background:var(--amber-l);color:#92400E;border:1px solid #FCD34D}
+.s-bad{background:var(--red-l);color:var(--red);border:1px solid #FECACA}
+.s-nd{background:var(--surface3);color:var(--ink3);border:1px solid var(--border)}
+
+/* ── MISC ── */
+.pg-bar{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-top:5px}
+.pg-fill{height:100%;border-radius:3px;background:var(--green);transition:width .5s}
+.scan-box{border:2px dashed var(--blue);border-radius:var(--r10);padding:20px;text-align:center;background:var(--blue-l);cursor:pointer}
+.scan-res{border:1.5px solid var(--border);border-radius:var(--r8);padding:12px;margin-top:10px;background:#fff}
+.empty{text-align:center;padding:36px;color:var(--ink3)}.empty i{font-size:32px;display:block;margin-bottom:8px;opacity:.4}
+.wa-box{background:var(--green-l);border-radius:var(--r6);padding:10px 12px;font-size:11px;border-left:3px solid var(--green);margin-top:10px;color:var(--green-d)}
+.cfbox{background:var(--surface2);border-radius:var(--r8);padding:14px;margin-top:12px;border:1px solid var(--border)}
+.crow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}.crow:last-child{border-bottom:none}
+.ck{color:var(--ink3)}.cv{font-weight:600}
+.filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.db-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--green-l);color:var(--green-d);border:1px solid #A7F3D0}
+.db-badge-off{background:var(--amber-l);color:var(--amber);border-color:#FCD34D}
+</style>
+</head>
+<body>
+
+<!-- ════════════ PANTALLA 0: CONFIGURAR SUPABASE ════════════ -->
+<div class="scr on" id="scr-cfg">
+<div class="cfg-wrap"><div class="cfg-box">
+  <div style="text-align:center;margin-bottom:20px">
+    <div class="cfg-icon">⚡</div>
+    <div class="cfg-title">Conectar a Supabase</div>
+    <div class="cfg-sub">Configure las credenciales para activar la base de datos en tiempo real</div>
+  </div>
+  <div class="cfg-note">
+    <b>¿Cómo obtener estas credenciales?</b><br>
+    1. Vaya a <b>supabase.com</b> → su proyecto → <b>Settings → API</b><br>
+    2. Copie la <code>Project URL</code> y la <code>anon/public key</code><br>
+    3. Asegúrese de haber ejecutado el <b>SQL de creación de tablas</b> (ver guía técnica)
+  </div>
+  <div id="al-cfg"></div>
+  <div class="fg">
+    <label class="fl">Project URL</label>
+    <input class="fc" id="cfg-url" placeholder="https://xxxxxxxxxxxx.supabase.co">
+  </div>
+  <div class="fg">
+    <label class="fl">Anon / Public Key</label>
+    <input class="fc" id="cfg-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+  </div>
+  <div style="display:flex;gap:8px;margin-top:4px">
+    <button class="bfull b-oper" onclick="connectSupabase()" style="flex:1"><i class="ti ti-plug"></i> Conectar a Supabase</button>
+    <button class="bfull b-out" onclick="useOfflineMode()" style="flex:0 0 auto;padding:11px 16px;font-size:12px"><i class="ti ti-wifi-off"></i> Modo sin BD</button>
+  </div>
+  <div class="hint" style="margin-top:14px">
+    <b>Modo sin BD:</b> Funciona con datos en memoria. Los datos se pierden al cerrar el navegador y no se sincronizan entre usuarios.<br><br>
+    <b>Con Supabase:</b> Datos persistentes, multiusuario simultáneo, historial completo.
+  </div>
+</div></div>
+</div>
+
+<!-- ════════════ PANTALLA 1: LOGIN ════════════ -->
+<div class="scr" id="scr-login">
+<div class="lw"><div class="lb">
+  <div class="ll">
+    <div class="ll-icon">🚛</div>
+    <div class="ll-brand">YMS Pro</div>
+    <div class="ll-sub" id="db-mode-label">Cargando…</div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="tab-prov" onclick="swTab('prov')"><i class="ti ti-package"></i> Proveedor</button>
+    <button class="tab" id="tab-oper" onclick="swTab('oper')"><i class="ti ti-shield-check"></i> Operador</button>
+  </div>
+  <!-- Panel Proveedor -->
+  <div class="fpanel on" id="pan-prov">
+    <div id="al-prov"></div>
+    <div id="prov-log">
+      <div class="fg"><label class="fl">Correo</label><input class="fc" id="pl-email" type="email" placeholder="proveedor@empresa.com"><div class="em" id="em-pl-email">Correo inválido</div></div>
+      <div class="fg"><label class="fl">Contraseña</label><input class="fc" id="pl-pass" type="password" placeholder="••••••••"><div class="em" id="em-pl-pass">Requerida</div></div>
+      <button class="bfull b-prov" onclick="lgProv()"><i class="ti ti-login"></i> Ingresar como proveedor</button>
+      <div class="div-or">¿Primera vez?</div>
+      <button class="bfull b-out" onclick="shReg()"><i class="ti ti-user-plus"></i> Crear cuenta de proveedor</button>
+    </div>
+    <div id="prov-reg" style="display:none">
+      <div id="al-reg"></div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Empresa *</label><input class="fc" id="rg-emp" placeholder="Empresa ABC S.A.S"><div class="em" id="em-rg-emp">Requerido</div></div>
+        <div class="fg"><label class="fl">NIT</label><input class="fc" id="rg-nit" placeholder="900.123.456-7"></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Contacto *</label><input class="fc" id="rg-nom" placeholder="Juan Pérez"><div class="em" id="em-rg-nom">Requerido</div></div>
+        <div class="fg"><label class="fl">Teléfono</label><input class="fc" id="rg-tel" placeholder="+57 300 000 0000"></div>
+      </div>
+      <div class="fg"><label class="fl">Correo *</label><input class="fc" id="rg-email" type="email" placeholder="juan@empresa.com"><div class="em" id="em-rg-email">Inválido</div></div>
+      <div class="fg"><label class="fl">Contraseña *</label><input class="fc" id="rg-pass" type="password" placeholder="Mínimo 6 caracteres"><div class="em" id="em-rg-pass">Mín. 6 caracteres</div></div>
+      <button class="bfull b-prov" onclick="doReg()"><i class="ti ti-user-check"></i> Registrarse y continuar</button>
+      <div style="text-align:center;margin-top:10px"><button class="lnk" onclick="shLog()">← Volver al ingreso</button></div>
+    </div>
+    <div class="hint" id="hint-prov">
+      <b>Cada proveedor tiene su propio usuario.</b><br>
+      Sus citas solo son visibles para usted y los operadores.
+    </div>
+  </div>
+  <!-- Panel Operador -->
+  <div class="fpanel" id="pan-oper">
+    <div id="al-oper"></div>
+    <div class="fg"><label class="fl">Correo</label><input class="fc" id="ol-user" type="email" placeholder="operador@empresa.com"><div class="em" id="em-ol-user">Requerido</div></div>
+    <div class="fg"><label class="fl">Contraseña</label><input class="fc" id="ol-pass" type="password" placeholder="••••••••"><div class="em" id="em-ol-pass">Requerida</div></div>
+    <button class="bfull b-oper" onclick="lgOper()"><i class="ti ti-shield-check"></i> Ingresar como operador</button>
+    <div class="hint">
+      Las cuentas de operador son creadas por el administrador del sistema.<br>
+      No hay registro público para operadores.
+    </div>
+  </div>
+</div></div>
+</div>
+
+<!-- ════════════ PANTALLA 2: APP ════════════ -->
+<div class="scr" id="scr-app">
+<div class="app">
+  <div class="sb">
+    <div class="sb-top">
+      <div class="sb-logo">
+        <div class="sb-logo-icon">🚛</div>
+        <div><div class="sb-logo-txt">YMS Pro</div><div class="sb-logo-sub" id="sb-db-badge">Conectando…</div></div>
+      </div>
+    </div>
+    <div class="sb-nav" id="sb-nav"></div>
+    <div class="sb-user">
+      <div class="su-row">
+        <div class="su-av" id="su-av">?</div>
+        <div style="min-width:0">
+          <div class="su-name" id="su-name">—</div>
+          <div class="su-role" id="su-role">—</div>
+        </div>
+      </div>
+      <button class="lo-btn" onclick="logout()"><i class="ti ti-logout"></i> Cerrar sesión</button>
+    </div>
+    <div style="padding:8px 14px 12px;font-size:9px;color:rgba(255,255,255,.22);line-height:1.5;border-top:1px solid rgba(255,255,255,.05)">
+      © 2026 Juan Camilo Pérez<br>Todos los derechos reservados.
+    </div>
+  </div>
+  <div class="mn">
+    <div class="tb">
+      <span class="tb-title" id="tb-title">YMS Pro</span>
+      <div class="tb-r">
+        <span class="rpill" id="rpill">—</span>
+        <span id="db-indicator" style="font-size:10px"></span>
+        <span class="clock" id="clock">--:--</span>
+      </div>
+    </div>
+    <div class="mpg" id="mpg"><div class="loading-box"><div class="spin"></div>Cargando…</div></div>
+  </div>
+</div>
+</div>
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════════════
+   YMS Pro v5 — Con integración a Supabase
+   
+   ARQUITECTURA:
+   - Supabase Auth maneja registro/login de TODOS los usuarios
+   - La tabla "profiles" almacena el rol: provider | operator | admin
+   - Cada tabla tiene RLS → proveedor solo ve SUS datos
+   - En modo offline usa datos demo en memoria (no se sincronizan)
+════════════════════════════════════════════════════════════════ */
+
+/* ─── CONFIG ─── */
+let SB = null;           // Cliente Supabase
+let ME = null;           // Usuario actual {id, email, role, name, company}
+let OFFLINE = false;     // true = sin Supabase
+
+/* ─── DATOS DEMO (modo offline) ─── */
+const DEMO = {
+  users: [
+    {id:'u1', email:'demo@proveedor.com',  pass:'demo123',  role:'provider', name:'Distribuciones Demo', company:'Distribuciones Demo S.A.S'},
+    {id:'u2', email:'demo2@proveedor.com', pass:'demo456',  role:'provider', name:'Textiles Andinos',    company:'Textiles Andinos S.A.S'},
+    {id:'u3', email:'admin@bodega.com',    pass:'admin123', role:'admin',    name:'Administrador',       company:'Centro de Distribución YMS'},
+    {id:'u4', email:'aux@bodega.com',      pass:'aux456',   role:'operator', name:'Auxiliar Bodega',     company:'Centro de Distribución YMS'},
+  ],
+  appointments: [
+    {id:1, prov_email:'demo@proveedor.com', oc:'OC-2024-00101', f_cita:new Date().toISOString().slice(0,10), h_cita:'08:00', f_llegada:new Date().toISOString().slice(0,10), h_llegada:'08:05', tipo_v:'TURBO',   placa:'UVW-456', conductor:'Pedro Gómez', celular:'+57 311 222 333', cajas:45, kg:890, tipo_entrega:'directo', empresa_t:'', status:'done', muelle:'Muelle 2', ini_desc:'08:30', fin_desc:'09:45', obs:'', factura:''},
+    {id:2, prov_email:'demo@proveedor.com', oc:'OC-2024-00112', f_cita:new Date().toISOString().slice(0,10), h_cita:'09:00', f_llegada:new Date().toISOString().slice(0,10), h_llegada:'09:10', tipo_v:'SENCILLO', placa:'XYZ-789', conductor:'Luis Mora',   celular:'+57 315 444 555', cajas:120,kg:2400,tipo_entrega:'transporte',empresa_t:'Rápidos del Valle',status:'loading',muelle:'Muelle 3',ini_desc:'09:45',fin_desc:'',obs:'',factura:''},
+    {id:3, prov_email:'demo@proveedor.com', oc:'OC-2024-00118', f_cita:new Date().toISOString().slice(0,10), h_cita:'10:00', f_llegada:new Date().toISOString().slice(0,10), h_llegada:'10:15', tipo_v:'NHR',      placa:'PQR-321', conductor:'Ana Torres', celular:'+57 318 666 777', cajas:30, kg:450, tipo_entrega:'directo', empresa_t:'', status:'waiting',muelle:'', ini_desc:'', fin_desc:'', obs:'', factura:''},
+    {id:4, prov_email:'demo@proveedor.com', oc:'OC-2024-00125', f_cita:new Date().toISOString().slice(0,10), h_cita:'11:00', f_llegada:'',h_llegada:'',tipo_v:'Van',placa:'MNO-654',conductor:'Jorge Ríos',celular:'+57 320 888 999',cajas:80,kg:1200,tipo_entrega:'directo',empresa_t:'',status:'scheduled',muelle:'',ini_desc:'',fin_desc:'',obs:'',factura:''},
+  ],
+  purchase_orders: [
+    {id:'OC-001', provider:'Distribuciones Demo', fecha:new Date().toISOString().slice(0,10), closed:false, items:[
+      {sku:'SKU-A001',desc:'Leche Entera 1L x12',  cajas:10,upc:12,total:120},
+      {sku:'SKU-B002',desc:'Jugo Naranja 500ml x24',cajas:5, upc:24,total:120},
+      {sku:'SKU-C003',desc:'Agua Mineral 600ml x24',cajas:8, upc:24,total:192},
+    ]},
+  ],
+  recepciones: [],
+  nextId: 5,
+};
+
+/* ─── CONSTANTES UI ─── */
+const SL={scheduled:'Programada',waiting:'En espera',loading:'Descargando',done:'Recibido',missed:'No asistió'};
+const SB_cl={scheduled:'b-sch',waiting:'b-wai',loading:'b-loa',done:'b-don',missed:'b-mis'};
+const MUELLES=['Muelle 1','Muelle 2','Muelle 3','Muelle 4','Muelle 5','Muelle 6'];
+
+const NAVS={
+  provider:[
+    {id:'agendar', i:'ti-calendar-plus',     l:'Agendar cita'},
+    {id:'miscitas',i:'ti-list-check',         l:'Mis citas'},
+    {id:'micumpl', i:'ti-chart-pie',          l:'Mi cumplimiento'},
+  ],
+  operator:[
+    {id:'live',       i:'ti-dashboard',          l:'Tablero en vivo'},
+    {id:'muelles',    i:'ti-building-warehouse', l:'Muelles y descarga'},
+    {id:'recibo_aux', i:'ti-barcode',            l:'Recibo de mercancía'},
+  ],
+  admin:[
+    {id:'live',         i:'ti-dashboard',          l:'Tablero en vivo'},
+    {id:'muelles',      i:'ti-building-warehouse', l:'Muelles y descarga'},
+    {id:'allcitas',     i:'ti-calendar',           l:'Citas programadas'},
+    {id:'importoc',     i:'ti-file-upload',        l:'Importar OC'},
+    {id:'recibo_admin', i:'ti-eye-check',          l:'Auditoría recibo'},
+    {id:'graficos',     i:'ti-chart-bar',          l:'Gráficos'},
+    {id:'cumpl',        i:'ti-clipboard-check',    l:'Cumplimiento'},
+    {id:'puntos',       i:'ti-map-pin',            l:'Puntos y muelles'},
+    {id:'exportar',     i:'ti-file-export',        l:'Exportar'},
+  ],
+};
+const TITLES={
+  agendar:'Agendar cita',miscitas:'Mis citas',micumpl:'Mi cumplimiento',
+  live:'Tablero en vivo',muelles:'Muelles y descarga',allcitas:'Citas programadas',
+  importoc:'Importar órdenes de compra',recibo_admin:'Auditoría de recibo',
+  recibo_aux:'Recibo de mercancía',graficos:'Gráficos y analíticas',
+  cumpl:'Cumplimiento',puntos:'Puntos de venta y muelles',exportar:'Exportar',
+};
+
+/* ─── HELPERS ─── */
+const g  = id => document.getElementById(id);
+const v  = id => (g(id)?.value||'').trim();
+function se(id,show){const e=g(id);if(!e)return;e.classList.toggle('on',show);const f=g(id.replace('em-',''));if(f)f.classList.toggle('err',show);}
+function ce(id){se(id,false);}
+function alBox(cid,type,msg){const e=g(cid);if(e)e.innerHTML=`<div class="al a${type}"><i class="ti ti-${type==='ok'?'circle-check':'alert-circle'}"></i>${msg}</div>`;}
+function clAl(id){const e=g(id);if(e)e.innerHTML='';}
+function bdg(st){return`<span class="bdg ${SB_cl[st]||'b-sch'}">${SL[st]||st}</span>`;}
+function nowTime(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+function todayDate(){return new Date().toISOString().slice(0,10);}
+function loading(msg='Cargando…'){g('mpg').innerHTML=`<div class="loading-box"><div class="spin"></div>${msg}</div>`;}
+
+setInterval(()=>{const e=g('clock');if(e)e.textContent=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});},1000);
+
+function fmtTime(t){if(!t)return'';return String(t).substring(0,5);}
+function fmtDate(d){if(!d)return'';return String(d).substring(0,10);}
+function calcC(a){
+  const fC=fmtDate(a.f_cita),hC=fmtTime(a.h_cita);
+  const fL=fmtDate(a.f_llegada),hL=fmtTime(a.h_llegada);
+  if(a.status==='missed'||a.status==='scheduled')return{r:'missed',lbl:'No se presentó',cls:'b-mis',diff:'—',fd:'—',hd:'—'};
+  if(!fL||!hL)return{r:'sininfo',lbl:'Sin información',cls:'b-sch',diff:'—',fd:'—',hd:'—'};
+  const dtC=new Date(fC+'T'+hC+':00'),dtL=new Date(fL+'T'+hL+':00');
+  if(isNaN(dtC)||isNaN(dtL))return{r:'sininfo',lbl:'Sin información',cls:'b-sch',diff:'—',fd:fL,hd:hL};
+  const dm=Math.round((dtL-dtC)/60000);
+  if(dm<-1440)return{r:'early',lbl:'Anticipado',cls:'b-ok',diff:'Anticipado',fd:fL,hd:hL};
+  if(dm<=15)return{r:'ok',lbl:'Cumplió',cls:'b-ok',diff:dm<=0?'A tiempo':'+'+dm+' min',fd:fL,hd:hL};
+  if(dm<=1440)return{r:'late',lbl:'Tardó '+dm+' min',cls:'b-lt',diff:'+'+dm+' min',fd:fL,hd:hL};
+  const d=Math.floor(dm/1440);return{r:'nodate',lbl:d+' día(s) tarde',cls:'b-nd',diff:'+'+d+'d',fd:fL,hd:hL};
+}
+
+/* ════════════════ CONEXIÓN SUPABASE ════════════════ */
+function connectSupabase(){
+  const url=v('cfg-url'),key=v('cfg-key');
+  if(!url||!key){alBox('al-cfg','err','Ingrese la URL y la clave del proyecto.');return;}
+  if(!url.includes('supabase.co')){alBox('al-cfg','err','La URL debe terminar en .supabase.co');return;}
+  try{
+    SB=supabase.createClient(url,key);
+    localStorage.setItem('yms_sb_url',url);
+    localStorage.setItem('yms_sb_key',key);
+    OFFLINE=false;
+    alBox('al-cfg','ok','Conectado. Verificando sesión…');
+    setTimeout(()=>showLogin(false),800);
+  }catch(e){alBox('al-cfg','err','Error al conectar: '+e.message);}
+}
+
+function useOfflineMode(){
+  OFFLINE=true; SB=null;
+  showLogin(true);
+}
+
+function showLogin(offline){
+  g('scr-cfg').classList.remove('on');
+  g('scr-login').classList.add('on');
+  const lbl=g('db-mode-label');
+  if(lbl) lbl.innerHTML=offline
+    ? '<span style="color:#D97706">⚠ Modo sin base de datos</span>'
+    : '<span style="color:#059669">✓ Conectado a Supabase</span>';
+  // Restaurar credenciales guardadas si las hay
+  if(!offline){
+    const savedUrl=localStorage.getItem('yms_sb_url');
+    const savedKey=localStorage.getItem('yms_sb_key');
+    if(savedUrl&&savedKey&&!SB){
+      SB=supabase.createClient(savedUrl,savedKey);
+    }
+    // Verificar sesión existente
+    if(SB) SB.auth.getSession().then(({data})=>{
+      if(data.session) loadUserProfile(data.session.user).then(launch);
+    });
+  }
+}
+
+/* ════════════════ AUTH ════════════════ */
+function swTab(t){['prov','oper'].forEach(x=>{g('tab-'+x).classList.toggle('on',x===t);g('pan-'+x).classList.toggle('on',x===t);});}
+function shReg(){g('prov-log').style.display='none';g('prov-reg').style.display='block';}
+function shLog(){g('prov-log').style.display='block';g('prov-reg').style.display='none';}
+
+async function lgProv(){
+  let ok=true;
+  const email=v('pl-email'),pass=v('pl-pass');
+  if(!email.includes('@')){se('em-pl-email',true);ok=false;}else ce('em-pl-email');
+  if(!pass){se('em-pl-pass',true);ok=false;}else ce('em-pl-pass');
+  if(!ok)return;
+
+  if(OFFLINE){
+    const u=DEMO.users.find(x=>x.email===email&&x.pass===pass&&x.role==='provider');
+    if(!u){alBox('al-prov','err','Credenciales incorrectas.');return;}
+    ME={id:u.id,email:u.email,role:u.role,name:u.name,company:u.company};
+    launch();return;
+  }
+  alBox('al-prov','ainfo','Verificando credenciales…');
+  const {data,error}=await SB.auth.signInWithPassword({email,password:pass});
+  if(error){alBox('al-prov','err','Error: '+error.message);return;}
+  const profile=await loadUserProfile(data.user);
+  if(profile.role!=='provider'){await SB.auth.signOut();alBox('al-prov','err','Esta cuenta no es de proveedor.');return;}
+  clAl('al-prov');launch();
+}
+
+async function lgOper(){
+  let ok=true;
+  const email=v('ol-user'),pass=v('ol-pass');
+  if(!email.includes('@')){se('em-ol-user',true);ok=false;}else ce('em-ol-user');
+  if(!pass){se('em-ol-pass',true);ok=false;}else ce('em-ol-pass');
+  if(!ok)return;
+
+  if(OFFLINE){
+    const u=DEMO.users.find(x=>x.email===email&&x.pass===pass&&(x.role==='operator'||x.role==='admin'));
+    if(!u){alBox('al-oper','err','Credenciales inválidas.');return;}
+    ME={id:u.id,email:u.email,role:u.role,name:u.name,company:u.company};
+    launch();return;
+  }
+  alBox('al-oper','ainfo','Verificando credenciales…');
+  const {data,error}=await SB.auth.signInWithPassword({email,password:pass});
+  if(error){alBox('al-oper','err','Error: '+error.message);return;}
+  const profile=await loadUserProfile(data.user);
+  if(profile.role==='provider'){await SB.auth.signOut();alBox('al-oper','err','Esta cuenta es de proveedor.');return;}
+  clAl('al-oper');launch();
+}
+
+async function doReg(){
+  let ok=true;
+  const emp=v('rg-emp'),nom=v('rg-nom'),email=v('rg-email'),pass=v('rg-pass');
+  if(!emp){se('em-rg-emp',true);ok=false;}else ce('em-rg-emp');
+  if(!nom){se('em-rg-nom',true);ok=false;}else ce('em-rg-nom');
+  if(!email.includes('@')){se('em-rg-email',true);ok=false;}else ce('em-rg-email');
+  if(pass.length<6){se('em-rg-pass',true);ok=false;}else ce('em-rg-pass');
+  if(!ok)return;
+
+  if(OFFLINE){
+    if(DEMO.users.find(x=>x.email===email)){alBox('al-reg','err','Ya existe una cuenta con ese correo.');return;}
+    const nu={id:'u'+Date.now(),email,pass,role:'provider',name:nom,company:emp};
+    DEMO.users.push(nu);ME={...nu};launch();return;
+  }
+  alBox('al-reg','ainfo','Creando cuenta…');
+  const {data,error}=await SB.auth.signUp({email,password:pass,options:{data:{company_name:emp,contact_name:nom,nit:v('rg-nit'),phone:v('rg-tel')}}});
+  if(error){alBox('al-reg','err','Error: '+error.message);return;}
+  // Insertar perfil con rol provider
+  if(data.user){
+    await SB.from('profiles').upsert({id:data.user.id,role:'provider',company_name:emp,contact_name:nom,nit:v('rg-nit'),phone:v('rg-tel')});
+    await loadUserProfile(data.user);
+    clAl('al-reg');launch();
+  }else{
+    alBox('al-reg','ok','Cuenta creada. Revise su correo para confirmar y luego inicie sesión.');
+  }
+}
+
+async function loadUserProfile(authUser){
+  if(OFFLINE)return ME;
+  const {data}=await SB.from('profiles').select('*').eq('id',authUser.id).single();
+  ME={
+    id:authUser.id,
+    email:authUser.email,
+    role:data?.role||'provider',
+    name:data?.contact_name||authUser.email.split('@')[0],
+    company:data?.company_name||'—',
+  };
+  return ME;
+}
+
+async function logout(){
+  if(!OFFLINE&&SB)await SB.auth.signOut();
+  ME=null;
+  g('scr-app').classList.remove('on');
+  g('scr-login').classList.add('on');
+  ['pl-email','pl-pass','ol-user','ol-pass'].forEach(id=>{const e=g(id);if(e)e.value='';});
+  clAl('al-prov');clAl('al-oper');shLog();swTab('prov');
+}
+
+/* ════════════════ LAUNCH ════════════════ */
+function launch(){
+  g('scr-login').classList.remove('on');
+  g('scr-app').classList.add('on');
+  const role=ME.role;
+  const ini=ME.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  g('su-av').textContent=ini;
+  g('su-av').className='su-av '+(role==='provider'?'av-p':role==='admin'?'av-a':'av-o');
+  g('su-name').textContent=ME.name;
+  g('su-role').textContent=role==='provider'?'Proveedor':role==='admin'?'Administrador':'Operario auxiliar';
+  const pill=g('rpill');
+  pill.textContent=role==='provider'?'Proveedor':role==='admin'?'Administrador':'Operario';
+  pill.className='rpill '+(role==='provider'?'rp-p':role==='admin'?'rp-a':'rp-o');
+  const badge=g('sb-db-badge');
+  if(badge)badge.innerHTML=OFFLINE?'<span style="color:#FCD34D">⚠ Sin BD</span>':'<span style="color:#34D399">● Supabase</span>';
+  const indicator=g('db-indicator');
+  if(indicator)indicator.innerHTML=OFFLINE?'<span style="font-size:10px;color:var(--amber)">Sin BD</span>':'<span style="font-size:10px;color:var(--green)">● BD activa</span>';
+  const items=NAVS[role]||[];
+  g('sb-nav').innerHTML=`<div class="sb-sec">${role==='provider'?'Proveedor':role==='admin'?'Administrador':'Operario'}</div>`+
+    items.map(n=>`<div class="ni" id="ni-${n.id}" onclick="go('${n.id}')"><i class="ti ${n.i}"></i>${n.l}</div>`).join('');
+  go(items[0]?.id);
+}
+
+function go(p){
+  document.querySelectorAll('.ni').forEach(e=>e.classList.remove('on'));
+  const ni=g('ni-'+p);if(ni)ni.classList.add('on');
+  g('tb-title').textContent=TITLES[p]||p;
+  const rs={
+    agendar:pgAgendar,miscitas:pgMisCitas,micumpl:pgMiCumpl,
+    live:pgLive,muelles:pgMuelles,allcitas:pgAllCitas,
+    importoc:pgImportOC,recibo_admin:pgReciboAdmin,recibo_aux:pgReciboAux,
+    graficos:pgGraficos,cumpl:pgCumpl,puntos:pgPuntosEntrega,exportar:pgExportar,
+  };
+  if(rs[p])rs[p]();
+}
+
+/* ════════════════════════════════════════════════════════════
+   CAPA DE DATOS — lee de Supabase o de DEMO según el modo
+════════════════════════════════════════════════════════════ */
+async function getAppointments(filters={}){
+  if(OFFLINE){
+    let list=[...DEMO.appointments];
+    if(filters.prov_email) list=list.filter(a=>a.prov_email===filters.prov_email);
+    if(filters.f_cita)     list=list.filter(a=>a.f_cita===filters.f_cita);
+    if(filters.from)       list=list.filter(a=>a.f_cita>=filters.from);
+    if(filters.to)         list=list.filter(a=>a.f_cita<=filters.to);
+    if(filters.status)     list=list.filter(a=>a.status===filters.status);
+    return list;
+  }
+  let q=SB.from('appointments').select('*').order('f_cita',{ascending:false});
+  if(filters.prov_email) q=q.eq('prov_email',filters.prov_email);
+  if(filters.f_cita)     q=q.eq('f_cita',filters.f_cita);
+  if(filters.from)       q=q.gte('f_cita',filters.from);
+  if(filters.to)         q=q.lte('f_cita',filters.to);
+  if(filters.status)        q=q.eq('status',filters.status);
+  if(filters.punto_entrega) q=q.eq('punto_entrega',filters.punto_entrega);
+  const {data,error}=await q;
+  if(error){console.error(error);return[];}
+  return data||[];
+}
+
+async function saveAppointment(cita){
+  if(OFFLINE){DEMO.appointments.push({...cita,id:DEMO.nextId++});return{ok:true};}
+  const {error}=await SB.from('appointments').insert(cita);
+  return error?{ok:false,error}:{ok:true};
+}
+
+async function updateAppointment(id,changes){
+  if(OFFLINE){
+    const a=DEMO.appointments.find(x=>x.id===id);
+    if(a)Object.assign(a,changes);
+    return{ok:true};
+  }
+  const {error}=await SB.from('appointments').update(changes).eq('id',id);
+  return error?{ok:false,error}:{ok:true};
+}
+
+async function getPurchaseOrders(){
+  if(OFFLINE)return DEMO.purchase_orders;
+  const {data}=await SB.from('purchase_orders').select('*,purchase_order_items(*)').order('fecha',{ascending:false});
+  // Normalizar: la columna en BD es 'descripcion', en JS usamos 'desc'
+  return (data||[]).map(oc=>({
+    ...oc,
+    items:(oc.purchase_order_items||[]).map(i=>({...i, desc:i.descripcion||i.desc||''})),
+  }));
+}
+
+async function savePurchaseOrder(oc){
+  if(OFFLINE){DEMO.purchase_orders.push(oc);return{ok:true};}
+  const {data,error}=await SB.from('purchase_orders').insert({id:oc.id,provider:oc.provider,fecha:oc.fecha,closed:false}).select().single();
+  if(error)return{ok:false,error};
+  if(oc.items?.length){
+    // 'desc' es palabra reservada en PostgreSQL → se guarda como 'descripcion'
+    const items=oc.items.map(i=>({
+      oc_id:data.id,
+      sku:i.sku,
+      descripcion:i.desc||i.descripcion||'',
+      cajas:i.cajas,
+      upc:i.upc,
+      total:i.total,
+    }));
+    const {error:itemErr}=await SB.from('purchase_order_items').insert(items);
+    if(itemErr)console.warn('Error guardando ítems OC:',itemErr.message);
+  }
+  return{ok:true};
+}
+
+async function getRecepciones(){
+  if(OFFLINE)return DEMO.recepciones;
+  const {data}=await SB.from('recepciones').select('*,recepcion_items(*)').order('created_at',{ascending:false});
+  return (data||[]).map(r=>({...r,items:r.recepcion_items||[]}));
+}
+
+async function saveRecepcion(rec){
+  if(OFFLINE){
+    const idx=DEMO.recepciones.findIndex(r=>r.id===rec.id);
+    if(idx>=0)DEMO.recepciones[idx]=rec;else DEMO.recepciones.push(rec);
+    return{ok:true};
+  }
+  // Upsert recepción
+  const {data,error}=await SB.from('recepciones').upsert({id:rec.id,oc_id:rec.ocId,operario_email:ME.email,cerrado:rec.cerrado}).select().single();
+  if(error)return{ok:false,error};
+  if(rec.items?.length){
+    await SB.from('recepcion_items').delete().eq('recepcion_id',data.id);
+    // Mapeo explícito para evitar enviar propiedades JS que no coincidan con columnas BD
+    await SB.from('recepcion_items').insert(rec.items.map(i=>({
+      recepcion_id:data.id,
+      sku:i.sku,
+      rec_cajas:i.rec_cajas||i.recCajas||0,
+      rec_upc:i.rec_upc||i.recUpc||0,
+      rec_total:i.rec_total||i.recTotal||0,
+    })));
+  }
+  return{ok:true};
+}
+
+/* ════════════════ PROVEEDOR: AGENDAR ════════════════ */
+function pgAgendar(){
+  const hrs=['07:00','07:30','08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30'].map(h=>`<option>${h}</option>`).join('');
+  const veh=['Moto','Automóvil','Van','NHR','TURBO','SENCILLO','TRACTO CAMION'].map(t=>`<option>${t}</option>`).join('');
+  g('mpg').innerHTML=`
+  <div style="max-width:580px">
+    <div id="al-ag"></div>
+    <div class="card" id="fc-card">
+      <div class="ch"><span class="ct">Nueva cita de entrega</span></div>
+      <div class="sep">Orden de compra</div>
+      <div class="g2">
+        <div class="fg"><label class="fl">N° Orden de compra *</label><input class="fc" id="fc-oc" placeholder="OC-2024-00123"><div class="em" id="em-fc-oc">Requerido</div></div>
+        <div class="fg"><label class="fl">Adjuntar OC (PDF/imagen)</label><input type="file" class="fc" id="fc-ocf" accept=".pdf,.png,.jpg"></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Cajas *</label><input type="number" class="fc" id="fc-caj" placeholder="0" min="0"><div class="em" id="em-fc-caj">Requerido</div></div>
+        <div class="fg"><label class="fl">Kilogramos *</label><input type="number" class="fc" id="fc-kg" placeholder="0" min="0"><div class="em" id="em-fc-kg">Requerido</div></div>
+      </div>
+      <div class="sep">Fecha y hora</div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Fecha (lun–vie) *</label><input type="date" class="fc" id="fc-fecha" onchange="chkD(this)"><div class="em" id="em-fc-fecha">Solo días hábiles</div></div>
+        <div class="fg"><label class="fl">Hora (07:00–15:00) *</label><select class="fc" id="fc-hora"><option value="">Seleccione</option>${hrs}</select><div class="em" id="em-fc-hora">Requerido</div></div>
+      </div>
+      <div id="pd-select-wrap"></div>
+      <div class="sep">Vehículo y conductor</div>
+      <div class="fg"><label class="fl">Tipo de entrega *</label><select class="fc" id="fc-te" onchange="tgT()"><option value="directo">Entrega directa (vehículo propio)</option><option value="transporte">A través de empresa de transporte</option></select></div>
+      <div id="twrap" style="display:none" class="fg"><label class="fl">Empresa transportadora *</label><input class="fc" id="fc-et" placeholder="Transportes Colombia S.A.S"><div class="em" id="em-fc-et">Requerido</div></div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Tipo de vehículo *</label><select class="fc" id="fc-tv"><option value="">Seleccione</option>${veh}</select><div class="em" id="em-fc-tv">Requerido</div></div>
+        <div class="fg"><label class="fl">Placa *</label><input class="fc" id="fc-pla" placeholder="ABC-123"><div class="em" id="em-fc-pla">Requerido</div></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Conductor *</label><input class="fc" id="fc-con" placeholder="Carlos Ramírez"><div class="em" id="em-fc-con">Requerido</div></div>
+        <div class="fg"><label class="fl">Celular conductor *</label><input class="fc" id="fc-cel" placeholder="+57 310 000 0000"><div class="em" id="em-fc-cel">Requerido</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn bp" onclick="confirmCita()"><i class="ti ti-calendar-check"></i> Confirmar cita</button>
+        <button class="btn" onclick="pgAgendar()"><i class="ti ti-refresh"></i> Limpiar</button>
+      </div>
+    </div>
+    <div class="card" id="res-card" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <i class="ti ti-circle-check" style="font-size:22px;color:var(--green)"></i>
+        <span style="font-size:15px;font-weight:700;color:var(--green)">Cita confirmada ${OFFLINE?'(solo en esta sesión)':'y guardada en BD'}</span>
+      </div>
+      <div class="cfbox" id="res-body"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn bp" onclick="go('miscitas')"><i class="ti ti-list-check"></i> Ver mis citas</button>
+        <button class="btn" onclick="pgAgendar()"><i class="ti ti-plus"></i> Nueva cita</button>
+      </div>
+    </div>
+  </div>`;
+  // Bloquear fechas pasadas/hoy para proveedores
+  const fi=document.getElementById('fc-fecha');
+  if(fi&&ME&&ME.role==='provider'){
+    const tom=new Date();tom.setDate(tom.getDate()+1);
+    fi.min=tom.toISOString().slice(0,10);
+  }
+  // Cargar selector PDV dinámico
+  getPuntosEntrega().then(pts=>{
+    const activos=pts.filter(p=>p.activo);
+    const wrap=document.getElementById('pd-select-wrap');
+    if(wrap&&activos.length){
+      const sel=activos.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+      wrap.innerHTML=`<div class="sep">Punto de venta</div>
+        <div class="fg"><label class="fl">¿En qué punto de venta entrega?</label>
+          <select class="fc" id="fc-pd"><option value="">Seleccione punto…</option>${sel}</select>
+        </div>`;
+    }
+  });
+}
+function chkD(inp){
+  ce('em-fc-fecha');if(!inp.value)return;
+  const d=new Date(inp.value+'T12:00:00');
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const emEl=document.getElementById('em-fc-fecha');
+  if(ME&&ME.role==='provider'&&d<=hoy){
+    se('em-fc-fecha',true);
+    if(emEl)emEl.textContent='Solo puede agendar para fechas posteriores a hoy.';
+    inp.value='';return;
+  }
+  if(d.getDay()===0||d.getDay()===6){
+    se('em-fc-fecha',true);
+    if(emEl)emEl.textContent='Solo dias habiles lunes a viernes.';
+    inp.value='';
+  }
+}
+function tgT(){const val=v('fc-te');const w=g('twrap');if(w)w.style.display=val==='transporte'?'block':'none';}
+async function confirmCita(){
+  let ok=true;
+  [['fc-oc','em-fc-oc'],['fc-caj','em-fc-caj'],['fc-kg','em-fc-kg'],
+   ['fc-fecha','em-fc-fecha'],['fc-hora','em-fc-hora']]
+    .forEach(([f,e])=>{if(!v(f)){se(e,true);ok=false;}else ce(e);});
+  if(v('fc-te')==='transporte'&&!v('fc-et')){se('em-fc-et',true);ok=false;}else ce('em-fc-et');
+  ['em-fc-tv','em-fc-pla','em-fc-con','em-fc-cel'].forEach(id=>ce(id));
+  if(!ok){alBox('al-ag','err','Complete todos los campos obligatorios.');setTimeout(()=>clAl('al-ag'),4000);return;}
+  const btn=document.querySelector('#fc-card .bp');if(btn){btn.disabled=true;btn.innerHTML='<div class="spin" style="width:14px;height:14px"></div> Guardando…';}
+  const fechaEl=document.getElementById('fc-fecha');
+  const fechaVal=fechaEl?fechaEl.value:'';
+  if(!fechaVal){alBox('al-ag','err','La fecha es requerida.');if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-check"></i> Confirmar cita';}return;}
+  const cita={
+    prov_email:ME.email,
+    oc:v('fc-oc'),f_cita:fechaVal,h_cita:v('fc-hora'),
+    punto_entrega:document.getElementById('fc-pd')?.value||'',
+    f_llegada:null,h_llegada:null,
+    tipo_v:v('fc-tv')||'',placa:v('fc-pla')||'',conductor:v('fc-con')||'',celular:v('fc-cel')||'',
+    cajas:+v('fc-caj'),kg:+v('fc-kg'),
+    tipo_entrega:v('fc-te'),empresa_t:v('fc-te')==='transporte'?v('fc-et'):'',
+    status:'scheduled',muelle:null,ini_desc:null,fin_desc:null,obs:'',factura:'',
+  };
+  const res=await saveAppointment(cita);
+  if(!res.ok){alBox('al-ag','err','Error al guardar: '+(res.error?.message||'Intente nuevamente'));if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-check"></i> Confirmar cita';}return;}
+  g('fc-card').style.display='none';g('res-card').style.display='block';
+  g('res-body').innerHTML=`
+    <div class="crow"><span class="ck">OC</span><span class="cv">${cita.oc}</span></div>
+    <div class="crow"><span class="ck">Fecha</span><span class="cv">${cita.f_cita}</span></div>
+    <div class="crow"><span class="ck">Hora</span><span class="cv">${cita.h_cita}</span></div>
+    <div class="crow"><span class="ck">Vehículo / Placa</span><span class="cv">${cita.tipo_v} · ${cita.placa}</span></div>
+    <div class="crow"><span class="ck">Conductor</span><span class="cv">${cita.conductor} · ${cita.celular}</span></div>
+    <div class="crow"><span class="ck">Cajas / Kg</span><span class="cv">${cita.cajas} cajas / ${cita.kg} kg</span></div>`;
+}
+
+/* ════════════════ PROVEEDOR: MIS CITAS ════════════════ */
+async function pgMisCitas(){
+  loading('Cargando sus citas…');
+  g('mpg').innerHTML=`
+  <div class="filter-bar">
+    <div class="fg" style="margin:0;display:flex;align-items:center;gap:6px"><label class="fl" style="margin:0">Desde:</label><input type="date" class="fc" style="width:145px" id="mc-from"></div>
+    <div class="fg" style="margin:0;display:flex;align-items:center;gap:6px"><label class="fl" style="margin:0">Hasta:</label><input type="date" class="fc" style="width:145px" id="mc-to"></div>
+    <button class="btn bp bsm" onclick="renderMisCitasTable()"><i class="ti ti-search"></i> Filtrar</button>
+    <button class="btn bsm" onclick="clearMCFilter()"><i class="ti ti-x"></i> Todos</button>
+    <button class="btn bp bsm" style="margin-left:auto" onclick="go('agendar')"><i class="ti ti-plus"></i> Nueva cita</button>
+  </div>
+  <div class="card"><div class="ch"><span class="ct" id="mc-title">Mis citas</span></div><div id="mc-body"><div class="loading-box"><div class="spin"></div>Cargando…</div></div></div>`;
+  await renderMisCitasTable();
+}
+async function renderMisCitasTable(){
+  const from=v('mc-from'),to=v('mc-to');
+  const list=await getAppointments({prov_email:ME.email,from,to});
+  g('mc-title').textContent=`Mis citas (${list.length} registros)`;
+  g('mc-body').innerHTML=!list.length
+    ?'<div class="empty"><i class="ti ti-calendar-off"></i>Sin citas en el período seleccionado</div>'
+    :`<div class="tw"><table><thead><tr><th>OC</th><th>Fecha cita</th><th>Hora</th><th>Vehículo</th><th>Placa</th><th>Cajas</th><th>Kg</th><th>Estado</th><th>Muelle</th></tr></thead><tbody>
+    ${list.map(a=>`<tr><td>${a.oc}</td><td>${a.f_cita}</td><td>${a.h_cita}</td><td>${a.tipo_v}</td><td>${a.placa}</td><td>${a.cajas}</td><td>${a.kg}</td><td>${bdg(a.status)}</td><td>${a.muelle||'—'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+function clearMCFilter(){g('mc-from').value='';g('mc-to').value='';renderMisCitasTable();}
+
+/* ════════════════ PROVEEDOR: MI CUMPLIMIENTO ════════════════ */
+async function pgMiCumpl(){
+  loading('Calculando cumplimiento…');
+  const list=await getAppointments({prov_email:ME.email});
+  const calcs=list.map(a=>({...a,...calcC(a)}));
+  const tot=list.length,cumpl=calcs.filter(a=>a.r==='ok'||a.r==='early').length;
+  const pct=tot?Math.round(cumpl/tot*100):0;
+  const col=pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)';
+  g('mpg').innerHTML=`
+  <div class="g3" style="margin-bottom:16px;max-width:520px">
+    <div class="metric"><div class="ml">Total citas</div><div class="mv">${tot}</div></div>
+    <div class="metric m-green"><div class="ml">Cumplidas</div><div class="mv">${cumpl}</div></div>
+    <div class="metric m-red"><div class="ml">Incumplidas</div><div class="mv">${tot-cumpl}</div></div>
+  </div>
+  <div class="card" style="max-width:360px;margin-bottom:16px">
+    <div class="ct">Mi % de cumplimiento</div>
+    <div style="font-size:42px;font-weight:800;color:${col};margin-top:8px">${pct}%</div>
+    <div class="pg-bar"><div class="pg-fill" style="width:${pct}%;background:${col}"></div></div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:6px">${cumpl} de ${tot} · tolerancia ≤ 15 min misma fecha</div>
+  </div>
+  <div class="card"><div class="ct" style="margin-bottom:12px">Detalle por cita</div>
+  <div class="tw"><table><thead><tr><th>OC</th><th>Fecha cita</th><th>Hora cita</th><th>Fecha llegada</th><th>Hora llegada</th><th>Diferencia</th><th>Resultado</th></tr></thead><tbody>
+  ${calcs.map(a=>`<tr><td>${a.oc}</td><td>${a.f_cita}</td><td>${a.h_cita}</td><td>${a.fd}</td><td>${a.hd}</td><td>${a.diff}</td><td><span class="bdg ${a.cls}">${a.lbl}</span></td></tr>`).join('')}
+  </tbody></table></div></div>`;
+}
+
+/* ════════════════ OPERADOR: LIVE (solo hoy) ════════════════ */
+async function pgLive(pdFiltro){
+  loading("Cargando tablero…");
+  pdFiltro = pdFiltro !== undefined ? pdFiltro : (window._livePDFiltro||"");
+  window._livePDFiltro = pdFiltro;
+  const hoy=todayDate();
+  const allList=await getAppointments({f_cita:hoy});
+  const list=pdFiltro?allList.filter(a=>(a.punto_entrega||"")===pdFiltro):allList;
+  const puntos=await getPuntosEntrega();
+  const puntosActivos=puntos.filter(p=>p.activo);
+  const pMap={};puntos.forEach(p=>pMap[p.id]=p.nombre);
+  const pdOpts=puntosActivos.map(p=>`<option value="${p.id}"${pdFiltro===p.id?" selected":""}>${p.nombre}</option>`).join("");
+  const sc=list.filter(a=>a.sin_cita===true).length;
+  const w=list.filter(a=>a.status==="waiting").length;
+  const l=list.filter(a=>a.status==="loading").length;
+  const d=list.filter(a=>a.status==="done").length;
+  const times=list.filter(a=>a.status==="done"&&a.ini_desc&&a.fin_desc).map(a=>{
+    const[h1,m1]=fmtTime(a.ini_desc).split(":").map(Number);
+    const[h2,m2]=fmtTime(a.fin_desc).split(":").map(Number);
+    const t=(h2*60+m2)-(h1*60+m1);return isNaN(t)?0:t;
+  }).filter(t=>t>=0);
+  const avg=times.length?Math.round(times.reduce((s,t)=>s+t,0)/times.length):null;
+  g("mpg").innerHTML=`
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink3)">
+      <i class="ti ti-calendar-today" style="color:var(--blue)"></i>
+      Hoy: <b>${hoy}</b>
+    </div>
+    ${puntosActivos.length?`<div style="display:flex;align-items:center;gap:6px">
+      <label style="font-size:11px;font-weight:600;color:var(--ink3)">PDV:</label>
+      <select class="fc" style="width:200px" onchange="pgLive(this.value)">
+        <option value="">Todos los puntos</option>${pdOpts}
+      </select>
+    </div>`:""}
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="btn bs bsm" onclick="pgRegistrarSinCita()"><i class="ti ti-user-plus"></i> Sin cita</button>
+      <button class="btn bsm" onclick="pgLive(window._livePDFiltro)"><i class="ti ti-refresh"></i> Actualizar</button>
+    </div>
+  </div>
+  <div class="g4" style="margin-bottom:16px">
+    <div class="metric"><div class="ml">Total hoy</div><div class="mv">${list.length}</div><div class="ms">${sc} sin cita previa</div></div>
+    <div class="metric m-amber"><div class="ml">En espera</div><div class="mv">${w}</div><div class="ms">Pendiente muelle</div></div>
+    <div class="metric m-blue"><div class="ml">Descargando</div><div class="mv">${l}</div></div>
+    <div class="metric m-green"><div class="ml">Recibidos</div><div class="mv">${d}</div><div class="ms">Prom: ${avg?avg+" min":"--"}</div></div>
+  </div>
+  <div class="card">
+    <div class="ct" style="margin-bottom:12px">Vehículos en patio hoy${pdFiltro&&pMap[pdFiltro]?" — "+pMap[pdFiltro]:""}</div>
+    ${!list.length?`<div class="empty"><i class="ti ti-truck-off"></i>No hay vehículos programados para hoy</div>`:`
+    <div class="tw"><table><thead><tr>
+      <th>OC</th><th>Proveedor</th><th>PDV</th><th>Placa</th><th>Tipo</th>
+      <th>Hora cita</th><th>Llegada</th><th>Estado</th><th>Muelle</th><th>Acción</th>
+    </tr></thead><tbody>
+    ${list.map(a=>{
+      const provName=a.prov_email?a.prov_email.split("@")[0]:"—";
+      const pdvNombre=pMap[a.punto_entrega]||a.punto_entrega||"—";
+      const acc=a.status==="scheduled"
+        ?`<button class="btn bsm" onclick="mkLlg(${a.id})"><i class="ti ti-truck-delivery"></i> Llegó</button>`
+        :a.status==="waiting"
+          ?`<button class="btn bp bsm" onclick="go('muelles')"><i class="ti ti-building-warehouse"></i> Asignar</button>`
+          :a.status==="loading"
+            ?`<button class="btn bs bsm" onclick="go('muelles')"><i class="ti ti-edit"></i> Registrar</button>`:"—";
+      return`<tr>
+        <td>${a.oc}</td>
+        <td style="font-size:11px;color:var(--ink3)">${provName}</td>
+        <td><span style="font-size:10px;background:var(--blue-l);color:var(--blue-d);padding:2px 6px;border-radius:4px;white-space:nowrap">${pdvNombre}</span></td>
+        <td>${a.placa||"—"}</td><td>${a.tipo_v||"—"}</td>
+        <td>${fmtTime(a.h_cita)}</td>
+        <td>${a.f_llegada?fmtTime(a.h_llegada):"—"}</td>
+        <td>${bdg(a.status)}</td><td>${a.muelle||"—"}</td><td>${acc}</td>
+      </tr>`;
+    }).join("")}
+    </tbody></table></div>`}
+  </div>`;
+}
+async function mkLlg(id){
+  const res=await updateAppointment(id,{f_llegada:todayDate(),h_llegada:nowTime(),status:'waiting'});
+  if(res.ok)pgLive();
+}
+
+/* ════════════════ MUELLES ════════════════ */
+async function pgMuelles(){
+  loading("Cargando muelles…");
+  const todosMuelles=getMuellesPD().filter(m=>m.activo);
+  const puntos=await getPuntosEntrega();
+  const puntosActivos=puntos.filter(p=>p.activo);
+  const pdFiltro=window._muellesPDFiltro||"";
+  const muellesFiltrados=pdFiltro?todosMuelles.filter(m=>m.punto_id===pdFiltro):todosMuelles;
+  const allA=await getAppointments({});
+  window._allA=allA;
+  const occ={};allA.filter(a=>a.muelle&&(a.status==="loading"||a.status==="waiting")).forEach(a=>occ[a.muelle]=a);
+  const mg=muellesFiltrados.length
+    ?muellesFiltrados.map(m=>{const o=occ[m.nombre];return`<div class="mc ${o?"mc-oc":"mc-av"}">
+        <div class="mc-nm">${m.nombre}</div>
+        <div class="mc-st">${o?"OC: "+o.oc:"Disponible"}</div>
+        ${m.punto_nombre?`<div style="font-size:9px;color:var(--ink4);margin-top:2px">${m.punto_nombre}</div>`:""}
+      </div>`;}).join("")
+    :`<div class="empty" style="padding:16px"><i class="ti ti-door-off"></i>Sin muelles para este punto.<br>Créelos en el menú "Puntos y muelles".</div>`;
+  const wOpts=allA.filter(a=>a.status==="waiting"||a.status==="loading")
+    .map(a=>`<option value="${a.id}">${a.oc} — ${a.placa||"S/P"} (${SL[a.status]})</option>`).join("");
+  const aOpts=allA.filter(a=>["waiting","loading","done"].includes(a.status))
+    .map(a=>`<option value="${a.id}">${a.oc} — ${a.placa||"S/P"} — ${a.conductor||"S/C"}</option>`).join("");
+  const avM=muellesFiltrados.filter(m=>!occ[m.nombre])
+    .map(m=>`<option value="${m.nombre}">${m.nombre}${m.punto_nombre?" ("+m.punto_nombre+")":""}</option>`).join("");
+  const pdOpts=puntosActivos.map(p=>`<option value="${p.id}"${pdFiltro===p.id?" selected":""}>${p.nombre}</option>`).join("");
+  g("mpg").innerHTML=`
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <label style="font-size:12px;font-weight:600;color:var(--ink3)">Filtrar por PDV:</label>
+    <select class="fc" style="width:220px" onchange="window._muellesPDFiltro=this.value;pgMuelles()">
+      <option value="">Todos los puntos</option>${pdOpts}
+    </select>
+    <button class="btn bsm" onclick="go('puntos')" style="margin-left:auto"><i class="ti ti-settings"></i> Administrar puntos y muelles</button>
+  </div>
+  <div class="card"><div class="ct" style="margin-bottom:12px">Estado de muelles</div>
+    <div class="mg">${mg}</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px">Asignar muelle y notificar WhatsApp</div>
+      <div id="al-mu"></div>
+      <div class="fg"><label class="fl">Vehículo en espera</label><select class="fc" id="m-veh"><option value="">Seleccione…</option>${wOpts}</select></div>
+      <div class="fg"><label class="fl">Muelle disponible</label><select class="fc" id="m-dock"><option value="">Seleccione…</option>${avM}</select></div>
+      <button class="btn bp" onclick="asigMu()"><i class="ti ti-send"></i> Asignar y notificar</button>
+      <div id="wa-out" style="display:none" class="wa-box"></div>
+    </div>
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px">Registrar eventos de descarga</div>
+      <div id="al-ev"></div>
+      <div class="fg"><label class="fl">Vehículo / Cita</label><select class="fc" id="ev-veh" onchange="plEv()"><option value="">Seleccione…</option>${aOpts}</select></div>
+      <div id="ev-transp-alert" style="display:none;margin-bottom:10px;padding:8px 10px;background:var(--amber-l);border-radius:6px;font-size:11px;color:var(--amber);border:1px solid #FCD34D">
+        <i class="ti ti-alert-triangle"></i> Cita por transportadora — complete datos del vehículo abajo.
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Fecha llegada</label><input type="date" class="fc" id="ev-fl"></div>
+        <div class="fg"><label class="fl">Hora llegada</label><input type="time" class="fc" id="ev-ll"></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Inicio descarga</label><input type="time" class="fc" id="ev-ini"></div>
+        <div class="fg"><label class="fl">Fin descarga</label><input type="time" class="fc" id="ev-fin"></div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;background:var(--surface2)">
+        <div style="font-size:10px;font-weight:700;color:var(--ink3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Datos del vehículo (editable)</div>
+        <div class="g2">
+          <div class="fg"><label class="fl">Tipo vehículo</label><select class="fc" id="ev-tv"><option value="">Seleccione</option>${["Moto","Automóvil","Van","NHR","TURBO","SENCILLO","TRACTO CAMION"].map(t=>`<option>${t}</option>`).join("")}</select></div>
+          <div class="fg"><label class="fl">Placa</label><input class="fc" id="ev-pla" placeholder="ABC-123"></div>
+        </div>
+        <div class="g2">
+          <div class="fg"><label class="fl">Conductor</label><input class="fc" id="ev-con" placeholder="Nombre"></div>
+          <div class="fg"><label class="fl">Celular</label><input class="fc" id="ev-cel" placeholder="+57 310 000 0000"></div>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Adjuntar factura</label><input type="file" class="fc" id="ev-fac" accept="image/*,.pdf"></div>
+      <div class="fg"><label class="fl">Observaciones</label><textarea class="fc" id="ev-obs" rows="2" style="resize:none" placeholder="Faltantes, daños…"></textarea></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn bs" onclick="guarEv()"><i class="ti ti-device-floppy"></i> Guardar</button>
+        <button class="btn" onclick="mkRec()"><i class="ti ti-check"></i> Marcar recibido</button>
+      </div>
+    </div>
+  </div>`;
+}
+function plEv(){
+  const id=v('ev-veh');const a=(window._allA||[]).find(x=>x.id==id);if(!a)return;
+  g('ev-fl').value=a.f_llegada||'';g('ev-ll').value=a.h_llegada||'';
+  g('ev-ini').value=a.ini_desc||'';g('ev-fin').value=a.fin_desc||'';g('ev-obs').value=a.obs||'';
+}
+async function asigMu(){
+  const vid=v('m-veh'),dock=v('m-dock');
+  if(!vid||!dock){g('al-mu').innerHTML='<div class="al aerr"><i class="ti ti-alert-circle"></i>Seleccione vehículo y muelle.</div>';return;}
+  const a=(window._allA||[]).find(x=>x.id==vid);
+  const res=await updateAppointment(+vid,{muelle:dock,status:'loading'});
+  if(!res.ok){g('al-mu').innerHTML='<div class="al aerr"><i class="ti ti-alert-circle"></i>Error al guardar.</div>';return;}
+  const out=g('wa-out');out.style.display='block';
+  out.innerHTML=`<i class="ti ti-brand-whatsapp"></i> WhatsApp a ${a?.celular||'conductor'}: "Vehículo ${a?.placa||''} asignado a ${dock}. Ingrese al muelle. — YMS Pro"`;
+  g('al-mu').innerHTML='<div class="al aok"><i class="ti ti-circle-check"></i>Muelle asignado y guardado en BD. Notificación enviada.</div>';
+  setTimeout(()=>pgMuelles(),1600);
+}
+async function guarEv(){
+  const id=v('ev-veh');if(!id){g('al-ev').innerHTML='<div class="al aerr"><i class="ti ti-alert-circle"></i>Seleccione vehículo.</div>';return;}
+  const changes={};
+  const fl=g('ev-fl').value,ll=g('ev-ll').value,ini=g('ev-ini').value,fin=g('ev-fin').value,obs=g('ev-obs').value,fac=g('ev-fac').files[0];
+  if(fl)changes.f_llegada=fl;
+  if(ll)changes.h_llegada=ll;
+  if(ini)changes.ini_desc=ini;
+  if(fin)changes.fin_desc=fin;
+  if(obs)changes.obs=obs;
+  if(fac)changes.factura=fac.name;
+  const a=(window._allA||[]).find(x=>x.id==id);
+  if(a&&a.status==='scheduled'&&fl&&ll)changes.status='waiting';
+  await updateAppointment(+id,changes);
+  g('al-ev').innerHTML='<div class="al aok"><i class="ti ti-circle-check"></i>Guardado en BD correctamente.</div>';
+  setTimeout(()=>{const e=g('al-ev');if(e)e.innerHTML='';},3000);
+}
+async function mkRec(){
+  const id=v('ev-veh');if(!id)return;
+  await updateAppointment(+id,{fin_desc:nowTime(),status:'done'});
+  g('al-ev').innerHTML='<div class="al aok"><i class="ti ti-circle-check"></i>Marcado como recibido. Muelle liberado.</div>';
+  setTimeout(()=>pgMuelles(),1200);
+}
+
+/* ════════════════ ADMIN: TODAS LAS CITAS ════════════════ */
+async function pgAllCitas(){
+  loading("Cargando citas…");
+  const puntos=await getPuntosEntrega();
+  const pdOpts=puntos.filter(p=>p.activo).map(p=>`<option value="${p.id}">${p.nombre}</option>`).join("");
+  g("mpg").innerHTML=`
+  <div class="filter-bar">
+    <div class="fg" style="margin:0;display:flex;align-items:center;gap:6px"><label class="fl" style="margin:0">Desde:</label><input type="date" class="fc" style="width:145px" id="ac-from"></div>
+    <div class="fg" style="margin:0;display:flex;align-items:center;gap:6px"><label class="fl" style="margin:0">Hasta:</label><input type="date" class="fc" style="width:145px" id="ac-to"></div>
+    <div class="fg" style="margin:0;display:flex;align-items:center;gap:6px"><label class="fl" style="margin:0">Estado:</label>
+      <select class="fc" style="width:130px" id="ac-status"><option value="">Todos</option>
+        ${Object.entries(SL).map(([k,v2])=>`<option value="${k}">${v2}</option>`).join("")}
+      </select>
+    </div>
+    ${pdOpts?`<div class="fg" style="margin:0;display:flex;align-items:center;gap:6px">
+      <label class="fl" style="margin:0">PDV:</label>
+      <select class="fc" style="width:160px" id="ac-pd"><option value="">Todos</option>${pdOpts}</select>
+    </div>`:""}
+    <button class="btn bp bsm" onclick="renderAllCitas()"><i class="ti ti-search"></i> Filtrar</button>
+    <button class="btn bsm" onclick="clearACFilter()"><i class="ti ti-x"></i> Limpiar</button>
+  </div>
+  <div class="card">
+    <div class="ch">
+      <span class="ct" id="ac-title">Todas las citas</span>
+      ${ME&&ME.role==="admin"?`<span style="font-size:11px;color:var(--amber)"><i class="ti ti-alert-triangle"></i> El botón Eliminar borra permanentemente</span>`:""}
+    </div>
+    <div id="ac-body"><div class="loading-box"><div class="spin"></div>Cargando…</div></div>
+  </div>`;
+  await renderAllCitas();
+}
+async function renderAllCitas(){
+  const from=v("ac-from"),to=v("ac-to"),st=v("ac-status"),pd=v("ac-pd")||"";
+  const puntos=await getPuntosEntrega();
+  const pMap={};puntos.forEach(p=>pMap[p.id]=p.nombre);
+  const list=await getAppointments({from,to,status:st});
+  const filtered=pd?list.filter(a=>(a.punto_entrega||"")===pd):list;
+  g("ac-title").textContent=`Todas las citas (${filtered.length} registros)`;
+  const isAdmin=ME&&ME.role==="admin";
+  g("ac-body").innerHTML=!filtered.length
+    ?`<div class="empty"><i class="ti ti-calendar-off"></i>Sin registros</div>`
+    :`<div class="tw"><table><thead><tr>
+        <th>OC</th><th>Proveedor</th><th>PDV</th><th>Fecha cita</th><th>Hora</th>
+        <th>Vehículo</th><th>Placa</th><th>Cajas</th><th>Estado</th><th>Muelle</th>
+        ${isAdmin?"<th>Eliminar</th>":""}
+      </tr></thead><tbody>
+      ${filtered.map(a=>`<tr>
+        <td>${a.oc}</td>
+        <td style="font-size:11px;color:var(--ink3)">${a.prov_email?.split("@")[0]||"—"}</td>
+        <td><span style="font-size:10px;background:var(--blue-l);color:var(--blue-d);padding:2px 6px;border-radius:4px">${pMap[a.punto_entrega]||a.punto_entrega||"—"}</span></td>
+        <td>${fmtDate(a.f_cita)}</td><td>${fmtTime(a.h_cita)}</td>
+        <td>${a.tipo_v||"—"}</td><td>${a.placa||"—"}</td><td>${a.cajas}</td>
+        <td>${bdg(a.status)}</td><td>${a.muelle||"—"}</td>
+        ${isAdmin?`<td><button class="btn bd bsm" onclick="eliminarCita(${a.id},'${a.oc}')"><i class="ti ti-trash"></i></button></td>`:""}
+      </tr>`).join("")}
+      </tbody></table></div>`;
+}
+function clearACFilter(){['ac-from','ac-to','ac-status','ac-pd'].forEach(id=>{const e=g(id);if(e)e.value='';});renderAllCitas();}
+
+/* ════════════════ ADMIN: IMPORTAR OC ════════════════ */
+async function pgImportOC(){
+  loading('Cargando órdenes…');
+  const ocs=await getPurchaseOrders();
+  g('mpg').innerHTML=`
+  <div class="card">
+    <div class="ch"><span class="ct">Órdenes de compra registradas</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn bsm" onclick="exportOCTemplate()"><i class="ti ti-file-download"></i> Descargar plantilla Excel</button>
+        <button class="btn bp bsm" onclick="addDemoOC()"><i class="ti ti-plus"></i> OC demo</button>
+      </div>
+    </div>
+    <div id="al-oc"></div>
+    <div class="tw"><table><thead><tr><th>ID</th><th>Proveedor</th><th>Fecha</th><th>Ítems</th><th>Total cajas</th><th>Total uds</th><th>Estado</th><th>Acc.</th></tr></thead>
+    <tbody>${ocs.map(oc=>`<tr>
+      <td><span style="font-family:monospace;font-size:11px;background:var(--surface2);padding:2px 6px;border-radius:4px">${oc.id}</span></td>
+      <td>${oc.provider}</td><td>${oc.fecha}</td>
+      <td>${oc.items?.length||0}</td>
+      <td>${(oc.items||[]).reduce((s,i)=>s+i.cajas,0)}</td>
+      <td><b>${(oc.items||[]).reduce((s,i)=>s+(i.total||0),0)}</b></td>
+      <td>${oc.closed?'<span class="bdg b-don">Cerrada</span>':'<span class="bdg b-sch">Abierta</span>'}</td>
+      <td><button class="btn bsm" onclick="viewOC('${oc.id}')"><i class="ti ti-eye"></i></button></td>
+    </tr>`).join('')}</tbody></table></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px"><i class="ti ti-file-spreadsheet" style="color:var(--green)"></i> Importar desde Excel</div>
+      <div style="background:var(--green-l);border:1px solid #A7F3D0;border-radius:8px;padding:10px 12px;font-size:11px;color:var(--green-d);margin-bottom:12px">
+        <b>Columnas requeridas:</b><br>
+        <code style="background:rgba(5,150,105,.1);padding:1px 5px;border-radius:3px">ID_OC | Proveedor | Fecha | SKU | Descripcion | Cajas | Uds_por_caja | Total_uds</code><br>
+        <span style="color:var(--ink3);margin-top:4px;display:block">Una fila por ítem. Primera fila = encabezado.</span>
+      </div>
+      <div class="fg"><label class="fl">Seleccionar archivo</label><input type="file" class="fc" id="xls-file" accept=".xlsx,.xls,.csv"></div>
+      <button class="btn bs" onclick="importFromExcel()"><i class="ti ti-file-spreadsheet"></i> Importar</button>
+      <div id="al-xls" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px">Agregar OC manualmente</div>
+      <div class="g2">
+        <div class="fg"><label class="fl">ID orden *</label><input class="fc" id="noc-id" placeholder="OC-2024-00200"></div>
+        <div class="fg"><label class="fl">Proveedor *</label><input class="fc" id="noc-prov" placeholder="Empresa proveedor"></div>
+      </div>
+      <div class="fg"><label class="fl">Fecha esperada</label><input type="date" class="fc" id="noc-fecha"></div>
+      <div style="margin:10px 0 6px;font-size:11px;font-weight:600;color:var(--ink2)">Ítems:</div>
+      <div id="items-wrap"></div>
+      <button class="btn bsm" onclick="addItem()" style="margin-bottom:10px"><i class="ti ti-plus"></i> Agregar ítem</button><br>
+      <button class="btn bp" onclick="saveOC()"><i class="ti ti-device-floppy"></i> Guardar OC</button>
+    </div>
+  </div>`;
+  addItem();
+}
+
+// ── Exportar plantilla Excel ──
+function exportOCTemplate(){
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['ID_OC','Proveedor','Fecha','SKU','Descripcion','Cajas','Uds_por_caja','Total_uds'],
+    ['OC-2024-00100','Empresa Proveedor S.A.S',new Date().toISOString().slice(0,10),'SKU-A001','Leche Entera 1L x12',10,12,120],
+    ['OC-2024-00100','Empresa Proveedor S.A.S',new Date().toISOString().slice(0,10),'SKU-B002','Jugo Naranja 500ml x24',5,24,120],
+    ['OC-2024-00101','Otro Proveedor Ltda',new Date().toISOString().slice(0,10),'SKU-C001','Agua Mineral 600ml x24',8,24,192],
+  ]);
+  // Ancho de columnas
+  ws['!cols']=[{wch:16},{wch:28},{wch:12},{wch:12},{wch:30},{wch:8},{wch:12},{wch:12}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Plantilla OC');
+  XLSX.writeFile(wb,'Plantilla_Importar_OC_YMS.xlsx');
+}
+
+// ── Importar desde Excel ──
+function importFromExcel(){
+  const fi=g('xls-file');
+  if(!fi.files.length){alBox('al-xls','err','Seleccione un archivo primero.');return;}
+  const file=fi.files[0];
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){alBox('al-xls','err','Archivo vacío o sin encabezados.');return;}
+      const ocMap={};
+      rows.forEach(row=>{
+        const id=String(row['ID_OC']||row['id_oc']||row['OC']||'').trim();
+        const prov=String(row['Proveedor']||row['proveedor']||'').trim();
+        const fecha=String(row['Fecha']||row['fecha']||'').trim();
+        const sku=String(row['SKU']||row['sku']||'').trim();
+        const desc=String(row['Descripcion']||row['descripcion']||row['Descripción']||'').trim();
+        const cajas=parseInt(row['Cajas']||row['cajas']||0)||0;
+        const upc=parseInt(row['Uds_por_caja']||row['upc']||row['Uds por caja']||0)||0;
+        const total=parseInt(row['Total_uds']||row['total']||row['Total uds']||0)||cajas*upc;
+        if(!id)return;
+        if(!ocMap[id])ocMap[id]={id,provider:prov,fecha,closed:false,items:[]};
+        if(sku)ocMap[id].items.push({sku,desc,cajas,upc,total:total||cajas*upc});
+      });
+      let added=0,skipped=0,errors=0;
+      const existing=await getPurchaseOrders();
+      const existIds=new Set(existing.map(o=>o.id));
+      for(const oc of Object.values(ocMap)){
+        if(existIds.has(oc.id)){skipped++;continue;}
+        const res=await savePurchaseOrder(oc);
+        if(res.ok)added++;else errors++;
+      }
+      alBox('al-xls','ok',`Importación completa: ${added} nuevas${skipped?', '+skipped+' ya existentes':''}${errors?', '+errors+' errores':''}.`);
+      const ocs=await getPurchaseOrders();
+      // Re-render table
+      document.querySelector('.card tbody') && pgImportOC();
+    }catch(err){alBox('al-xls','err','Error al leer el archivo: '+err.message);}
+  };
+  reader.readAsBinaryString(file);
+}
+
+let itemCount=0;
+function addItem(){
+  itemCount++;
+  const w=g('items-wrap');
+  const div=document.createElement('div');
+  div.id='item-'+itemCount;
+  div.style.cssText='border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px';
+  div.innerHTML=`
+    <div class="g2" style="margin-bottom:8px">
+      <div class="fg"><label class="fl">SKU *</label><input class="fc item-sku" placeholder="SKU-A001"></div>
+      <div class="fg"><label class="fl">Descripción *</label><input class="fc item-desc" placeholder="Leche Entera 1L x12"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end">
+      <div class="fg"><label class="fl">Cajas</label><input type="number" class="fc item-cajas" placeholder="0" min="0"></div>
+      <div class="fg"><label class="fl">Uds/caja</label><input type="number" class="fc item-upc" placeholder="0" min="0"></div>
+      <div class="fg"><label class="fl">Total uds</label><input type="number" class="fc item-total" placeholder="0" readonly style="background:var(--surface2);font-weight:700"></div>
+      <button class="btn bd bsm" onclick="document.getElementById('item-${itemCount}').remove()"><i class="ti ti-trash"></i></button>
+    </div>`;
+  div.querySelectorAll('.item-cajas,.item-upc').forEach(inp=>inp.addEventListener('input',()=>{
+    const c=+div.querySelector('.item-cajas').value||0;
+    const u=+div.querySelector('.item-upc').value||0;
+    div.querySelector('.item-total').value=c*u;
+  }));
+  w.appendChild(div);
+}
+async function saveOC(){
+  const id=v('noc-id'),prov=v('noc-prov'),fecha=v('noc-fecha');
+  if(!id||!prov){alBox('al-oc','err','Complete ID y proveedor.');return;}
+  const items=[];
+  g('items-wrap').querySelectorAll('[id^="item-"]').forEach(div=>{
+    const sku=div.querySelector('.item-sku').value.trim();
+    const desc=div.querySelector('.item-desc').value.trim();
+    const cajas=+div.querySelector('.item-cajas').value||0;
+    const upc=+div.querySelector('.item-upc').value||0;
+    if(sku&&desc)items.push({sku,desc,cajas,upc,total:cajas*upc});
+  });
+  if(!items.length){alBox('al-oc','err','Agregue al menos un ítem.');return;}
+  const res=await savePurchaseOrder({id,provider:prov,fecha,closed:false,items});
+  if(!res.ok){alBox('al-oc','err','Error al guardar: '+(res.error?.message||'Intente nuevamente'));return;}
+  alBox('al-oc','ok','OC guardada correctamente.');
+  pgImportOC();
+}
+async function addDemoOC(){
+  await savePurchaseOrder({id:'OC-DEMO-'+Date.now().toString().slice(-4),provider:'Lácteos del Sur',fecha:todayDate(),closed:false,items:[{sku:'SKU-D001',desc:'Yogur Natural 200g x24',cajas:12,upc:24,total:288},{sku:'SKU-D002',desc:'Queso Campesino 500g',cajas:6,upc:12,total:72}]});
+  pgImportOC();
+}
+async function viewOC(id){
+  const ocs=await getPurchaseOrders();
+  const oc=ocs.find(x=>x.id===id);if(!oc)return;
+  alert(`OC: ${oc.id}\nProveedor: ${oc.provider}\nFecha: ${oc.fecha}\n\nÍtems:\n${(oc.items||[]).map(i=>`• ${i.sku} — ${i.desc}: ${i.cajas} cajas × ${i.upc} uds = ${i.total} uds`).join('\n')}`);
+}
+
+/* ════════════════ AUX: RECIBO ════════════════ */
+let scanItems={},currentOCId=null;
+async function pgReciboAux(){
+  loading("Cargando órdenes…");
+  const puntos=await getPuntosEntrega();
+  const puntosActivos=puntos.filter(p=>p.activo);
+  const pdFiltro=window._reciboPDFiltro||"";
+  const pMap={};puntos.forEach(p=>pMap[p.id]=p.nombre);
+  const allOCs=(await getPurchaseOrders()).filter(oc=>!oc.closed);
+  const ocs=pdFiltro?allOCs.filter(oc=>!oc.punto_entrega||(oc.punto_entrega===pdFiltro)):allOCs;
+  const ocOpts=ocs.map(oc=>`<option value="${oc.id}">${oc.id} — ${oc.provider}</option>`).join("");
+  const pdOpts=puntosActivos.map(p=>`<option value="${p.id}"${pdFiltro===p.id?" selected":""}>${p.nombre}</option>`).join("");
+  g("mpg").innerHTML=`
+  ${puntosActivos.length?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;background:var(--blue-l);border-radius:8px;border:1px solid #BFDBFE;flex-wrap:wrap">
+    <i class="ti ti-map-pin" style="color:var(--blue)"></i>
+    <label style="font-size:12px;font-weight:600;color:var(--blue-d)">Punto de venta donde recibe:</label>
+    <select class="fc" style="width:220px" onchange="window._reciboPDFiltro=this.value;pgReciboAux()">
+      <option value="">Todos los puntos</option>${pdOpts}
+    </select>
+    ${pdFiltro?`<span style="font-size:11px;color:var(--blue-d);font-weight:600">Mostrando OCs de: ${pMap[pdFiltro]||pdFiltro}</span>`:""}
+  </div>`:""}
+  <div class="g2">
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px">Seleccionar orden a recibir</div>
+      <div class="fg"><label class="fl">Orden de compra (solo abiertas)</label>
+        <select class="fc" id="r-oc" onchange="loadOCItems()"><option value="">Seleccione OC…</option>${ocOpts}</select>
+      </div>
+      <div id="oc-info" style="display:none;margin-top:10px;padding:10px;background:var(--blue-l);border-radius:8px;font-size:12px;border:1px solid #BFDBFE"></div>
+    </div>
+    <div class="card">
+      <div class="ct" style="margin-bottom:10px">Escanear producto</div>
+      <div class="scan-box" onclick="simScan()">
+        <i class="ti ti-barcode" style="font-size:32px;color:var(--blue);display:block;margin-bottom:8px"></i>
+        <div style="font-size:13px;font-weight:600;color:var(--blue)">Clic para simular escaneo</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:4px">O ingrese el SKU manualmente</div>
+        <input class="fc" id="scan-sku" placeholder="SKU-A001" style="margin-top:10px;text-align:center"
+          onkeydown="if(event.key==='Enter')processScan()">
+      </div>
+      <div id="scan-result" style="display:none" class="scan-res"></div>
+    </div>
+  </div>
+  <div class="card" id="items-rec-card" style="display:none">
+    <div class="ch"><span class="ct">Ítems en recepción</span>
+      <button class="btn bs bsm" onclick="cerrarRecibo()"><i class="ti ti-lock"></i> Cerrar recibo</button>
+    </div>
+    <div id="al-rec"></div>
+    <div class="tw"><table><thead><tr>
+      <th>SKU</th><th>Descripción</th><th>Esperado</th><th>Cajas</th><th>Uds/caja</th><th>Total recibido</th>
+    </tr></thead><tbody id="rec-tbody"></tbody></table></div>
+  </div>`;
+  window._openOCs=ocs; scanItems={}; currentOCId=null;
+}
+async function loadOCItems(){
+  const id=v('r-oc');currentOCId=id;
+  const oc=(window._openOCs||[]).find(x=>x.id===id);if(!oc)return;
+  g('oc-info').style.display='block';
+  g('oc-info').innerHTML=`<b>Proveedor:</b> ${oc.provider} | <b>Fecha:</b> ${oc.fecha} | <b>Ítems:</b> ${oc.items?.length||0}`;
+  scanItems={};
+  (oc.items||[]).forEach(i=>{scanItems[i.sku]={...i,recCajas:0,recUpc:i.upc,recTotal:0};});
+  // Cargar recepción previa si existe
+  const recs=await getRecepciones();
+  const prev=recs.find(r=>r.ocId===id&&!r.cerrado);
+  if(prev)(prev.items||[]).forEach(ri=>{if(scanItems[ri.sku]){scanItems[ri.sku].recCajas=ri.recCajas||ri.rec_cajas||0;scanItems[ri.sku].recUpc=ri.recUpc||ri.rec_upc||scanItems[ri.sku].upc;scanItems[ri.sku].recTotal=ri.recTotal||ri.rec_total||0;}});
+  renderRecTable();
+}
+function simScan(){
+  const id=v('r-oc');
+  if(!id){g('scan-result').style.display='block';g('scan-result').innerHTML='<div class="al awarn"><i class="ti ti-alert-triangle"></i>Seleccione una OC primero.</div>';return;}
+  const skus=Object.keys(scanItems);if(!skus.length)return;
+  const sku=skus[Math.floor(Math.random()*skus.length)];g('scan-sku').value=sku;processScan();
+}
+function processScan(){
+  const sku=v('scan-sku').toUpperCase();
+  const item=Object.values(scanItems).find(i=>i.sku.toUpperCase()===sku);
+  const sr=g('scan-result');sr.style.display='block';
+  if(!item){sr.innerHTML=`<div class="al aerr"><i class="ti ti-alert-circle"></i>SKU <b>${sku}</b> no encontrado en esta OC.</div>`;return;}
+  sr.innerHTML=`
+    <div style="margin-bottom:10px"><span style="font-family:monospace;background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:12px">${item.sku}</span> <b style="margin-left:8px">${item.desc}</b></div>
+    <div style="font-size:11px;color:var(--ink3);margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:6px">
+      📦 Esperado: <b>${item.cajas}</b> cajas × <b>${item.upc}</b> uds/caja = <b>${item.total}</b> uds totales
+    </div>
+    <div class="g2">
+      <div class="fg"><label class="fl">Cajas recibidas</label><input type="number" class="fc" id="sc-cajas" placeholder="0" min="0" value="${item.recCajas||''}" oninput="calcScTotal('${item.sku}')"></div>
+      <div class="fg"><label class="fl">Uds por caja</label><input type="number" class="fc" id="sc-upc" min="0" value="${item.recUpc||item.upc}" oninput="calcScTotal('${item.sku}')"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">Total unidades recibidas</label>
+      <div id="sc-total-display" style="font-size:28px;font-weight:800;color:var(--blue);padding:10px;background:var(--blue-l);border-radius:8px;text-align:center">${(item.recCajas||0)*(item.recUpc||item.upc)} uds</div>
+      <div id="sc-diff-display" style="font-size:11px;text-align:center;color:var(--ink3);margin-top:4px">${getDiffText(item)}</div>
+    </div>
+    <button class="btn bs" onclick="saveItem('${item.sku}')"><i class="ti ti-device-floppy"></i> Registrar cantidades</button>`;
+}
+function getDiffText(item){
+  const c=+v('sc-cajas')||item.recCajas||0;const u=+v('sc-upc')||item.recUpc||item.upc;
+  const rec=c*u;const diff=rec-item.total;
+  if(diff===0)return`✅ Coincide con lo esperado (${item.total} uds)`;
+  if(diff<0)return`⚠️ Faltante: ${Math.abs(diff)} uds (se esperaban ${item.total})`;
+  return`⚠️ Sobrante: +${diff} uds sobre las ${item.total} esperadas`;
+}
+function calcScTotal(sku){
+  const c=+v('sc-cajas')||0,u=+v('sc-upc')||0,total=c*u;
+  const d=g('sc-total-display');if(d)d.textContent=total+' uds';
+  const diff=g('sc-diff-display');if(diff&&scanItems[sku])diff.textContent=getDiffText({...scanItems[sku],recCajas:c,recUpc:u});
+}
+async function saveItem(sku){
+  const item=scanItems[sku];if(!item)return;
+  item.recCajas=+v('sc-cajas')||0;item.recUpc=+v('sc-upc')||item.upc;item.recTotal=item.recCajas*item.recUpc;
+  g('scan-result').innerHTML=`<div class="al aok"><i class="ti ti-circle-check"></i>Registrado: ${item.sku} — ${item.recCajas} cajas × ${item.recUpc} uds = <b>${item.recTotal} uds</b></div>`;
+  g('scan-sku').value='';
+  await persistRecibo();
+  renderRecTable();
+}
+async function persistRecibo(){
+  if(!currentOCId)return;
+  const recs=await getRecepciones();
+  const existing=recs.find(r=>r.ocId===currentOCId&&!r.cerrado);
+  const id=existing?.id||'REC-'+Date.now();
+  const items=Object.values(scanItems).map(i=>({sku:i.sku,rec_cajas:i.recCajas,rec_upc:i.recUpc,rec_total:i.recTotal}));
+  await saveRecepcion({id,ocId:currentOCId,operario:ME.email,cerrado:false,items});
+}
+function renderRecTable(){
+  const items=Object.values(scanItems);if(!items.length)return;
+  g('items-rec-card').style.display='block';
+  g('rec-tbody').innerHTML=items.map(i=>{
+    const pct=i.total?Math.round(i.recTotal/i.total*100):0;
+    const cls=i.recTotal===0?'s-nd':pct>=100?'s-ok':pct>=80?'s-warn':'s-bad';
+    return`<tr><td><span style="font-family:monospace;font-size:11px">${i.sku}</span></td><td>${i.desc}</td><td>${i.cajas}cj × ${i.upc}uds = ${i.total}</td>
+    <td><input type="number" value="${i.recCajas}" min="0" class="fc" style="width:70px;padding:4px 7px" onchange="updItem('${i.sku}','cajas',this.value)"></td>
+    <td><input type="number" value="${i.recUpc||i.upc}" min="0" class="fc" style="width:70px;padding:4px 7px" onchange="updItem('${i.sku}','upc',this.value)"></td>
+    <td><div style="font-weight:700">${i.recTotal} uds</div><span class="bdg ${cls}" style="padding:3px 8px;margin-top:3px">${pct}%</span></td></tr>`;
+  }).join('');
+}
+async function updItem(sku,field,val){const i=scanItems[sku];if(!i)return;if(field==='cajas')i.recCajas=+val||0;else i.recUpc=+val||i.upc;i.recTotal=i.recCajas*i.recUpc;await persistRecibo();renderRecTable();}
+async function cerrarRecibo(){
+  if(!currentOCId){alBox('al-rec','err','Seleccione una OC.');return;}
+  await persistRecibo();
+  const recs=await getRecepciones();
+  const rec=recs.find(r=>r.ocId===currentOCId&&!r.cerrado);
+  if(rec)await saveRecepcion({...rec,cerrado:true});
+  if(OFFLINE){const oc=DEMO.purchase_orders.find(x=>x.id===currentOCId);if(oc)oc.closed=true;}
+  else await SB.from('purchase_orders').update({closed:true}).eq('id',currentOCId);
+  alBox('al-rec','ok','Recibo cerrado y guardado en BD. El administrador puede ver la auditoría.');
+  setTimeout(()=>{g('mpg').innerHTML=`<div class="al aok" style="max-width:420px"><i class="ti ti-circle-check"></i><div><b>Recibo completado.</b><br>Los datos están en la base de datos y disponibles para auditoría.</div></div>`;},1500);
+}
+
+/* ════════════════ ADMIN: AUDITORÍA ════════════════ */
+async function pgReciboAdmin(){
+  loading('Cargando recepciones…');
+  const recs=await getRecepciones();
+  const recOpts=recs.map(r=>`<option value="${r.id}">${r.id} — OC: ${r.ocId||r.oc_id} — ${r.cerrado?'Cerrado':'En progreso'}</option>`).join('');
+  g('mpg').innerHTML=`
+  <div class="card">
+    <div class="ct" style="margin-bottom:12px">Auditoría de recibo</div>
+    ${!recs.length
+      ?'<div class="al awarn"><i class="ti ti-alert-triangle"></i>No hay recepciones registradas. El auxiliar debe iniciar un recibo.</div>'
+      :`<div class="fg" style="max-width:420px"><label class="fl">Seleccionar recibo</label>
+         <select class="fc" id="aud-rec" onchange="renderAudit()"><option value="">Seleccione…</option>${recOpts}</select></div>`}
+    <div id="audit-content" style="margin-top:16px"></div>
+  </div>`;
+  window._recs=recs;
+}
+async function renderAudit(){
+  const rid=v('aud-rec');
+  const rec=(window._recs||[]).find(x=>x.id===rid);if(!rec){g('audit-content').innerHTML='';return;}
+  const ocId=rec.ocId||rec.oc_id;
+  const ocs=await getPurchaseOrders();
+  const oc=ocs.find(x=>x.id===ocId);
+  if(!oc){g('audit-content').innerHTML='<div class="al awarn">OC no encontrada.</div>';return;}
+  const diffRows=(oc.items||[]).map(item=>{
+    const ri=(rec.items||[]).find(x=>x.sku===item.sku)||{};
+    const recTotal=ri.rec_total||ri.recTotal||(ri.rec_cajas||ri.recCajas||0)*(ri.rec_upc||ri.recUpc||item.upc);
+    const diff=recTotal-item.total;const pct=item.total?Math.round(recTotal/item.total*100):0;
+    let cls='s-ok',lbl='OK';
+    if(recTotal===0&&item.total>0){cls='s-bad';lbl='Sin recibir';}
+    else if(pct<80){cls='s-bad';lbl='Faltante crítico';}
+    else if(pct<100){cls='s-warn';lbl='Faltante menor';}
+    else if(pct>100){cls='s-warn';lbl='Sobrante';}
+    return{...item,recTotal,diff,pct,cls,lbl};
+  });
+  const tot_esp=(oc.items||[]).reduce((s,i)=>s+i.total,0);
+  const tot_rec=diffRows.reduce((s,i)=>s+i.recTotal,0);
+  const pct_gbl=tot_esp?Math.round(tot_rec/tot_esp*100):0;
+  const col_gbl=pct_gbl>=100?'var(--green)':pct_gbl>=80?'var(--amber)':'var(--red)';
+  g('audit-content').innerHTML=`
+  <div class="g3" style="margin-bottom:16px">
+    <div class="metric m-blue"><div class="ml">OC</div><div class="mv" style="font-size:15px">${oc.id}</div><div class="ms">${oc.provider}</div></div>
+    <div class="metric"><div class="ml">Total esperado</div><div class="mv">${tot_esp} uds</div></div>
+    <div class="metric"><div class="ml">Recibido</div><div class="mv" style="color:${col_gbl}">${tot_rec} uds (${pct_gbl}%)</div><div class="ms">${rec.cerrado?'Cerrado':'En progreso'}</div></div>
+  </div>
+  <div style="display:flex;gap:8px;font-size:11px;margin-bottom:10px">
+    <span class="bdg s-ok" style="padding:4px 10px">● OK 100%</span>
+    <span class="bdg s-warn" style="padding:4px 10px">● Alerta 80–99%</span>
+    <span class="bdg s-bad" style="padding:4px 10px">● Crítico &lt;80%</span>
+  </div>
+  <div class="tw"><table><thead><tr><th>SKU</th><th>Descripción</th><th>Esperado</th><th>Recibido</th><th>Diferencia</th><th>%</th><th>Estado</th></tr></thead><tbody>
+  ${diffRows.map(i=>`<tr>
+    <td><span style="font-family:monospace;font-size:11px">${i.sku}</span></td>
+    <td>${i.desc}</td><td>${i.total} uds</td><td>${i.recTotal} uds</td>
+    <td style="font-weight:700;color:${i.diff===0?'var(--green)':i.diff<0?'var(--red)':'var(--amber)'}">${i.diff>0?'+':''}${i.diff} uds</td>
+    <td>${i.pct}%</td><td><span class="bdg ${i.cls}" style="padding:4px 10px">${i.lbl}</span></td>
+  </tr>`).join('')}
+  </tbody></table></div>
+  <div style="margin-top:14px;padding:10px 14px;border-radius:8px;background:${pct_gbl>=100?'var(--green-l)':pct_gbl>=80?'var(--amber-l)':'var(--red-l)'};border-left:3px solid ${col_gbl};font-size:12px;font-weight:600;color:${col_gbl}">
+    <i class="ti ti-${pct_gbl>=100?'circle-check':pct_gbl>=80?'alert-triangle':'alert-circle'}"></i>
+    ${pct_gbl>=100?'Recibo completo — sin diferencias.':pct_gbl>=80?'Diferencias menores — revisar antes de aprobar.':'Diferencias críticas — AUDITORÍA REQUERIDA.'}
+  </div>`;
+}
+
+/* ════════════════ ADMIN: GRÁFICOS ════════════════ */
+async function pgGraficos(fromDate,toDate,granularidad){
+  loading("Calculando estadísticas…");
+  if(!fromDate||!toDate){
+    const hoy=new Date();
+    toDate=hoy.toISOString().slice(0,10);
+    const desde=new Date(hoy);desde.setDate(hoy.getDate()-6);
+    fromDate=desde.toISOString().slice(0,10);
+    granularidad=granularidad||"semana";
+  }
+  granularidad=granularidad||"semana";
+  window._granG=granularidad;
+  const pdFilter=document.getElementById("g-pd")?.value||"";
+  const all=await getAppointments({from:fromDate,to:toDate});
+  const list=pdFilter?all.filter(a=>(a.punto_entrega||"")===pdFilter):all;
+  const done=list.filter(a=>a.status==="done");
+  const totC=done.reduce((s,a)=>s+(+a.cajas||0),0);
+  const totK=done.reduce((s,a)=>s+(+a.kg||0),0);
+  const times=done.filter(a=>a.ini_desc&&a.fin_desc).map(a=>{
+    const[h1,m1]=fmtTime(a.ini_desc).split(":").map(Number);
+    const[h2,m2]=fmtTime(a.fin_desc).split(":").map(Number);
+    const t=(h2*60+m2)-(h1*60+m1);return isNaN(t)?0:t;
+  }).filter(t=>t>=0);
+  const avgV=times.length?Math.round(times.reduce((s,t)=>s+t,0)/times.length):0;
+  // Series por fecha real
+  const dateMap={};
+  list.forEach(a=>{const d=fmtDate(a.f_cita);if(!d)return;
+    if(!dateMap[d])dateMap[d]={v:0,k:0};
+    dateMap[d].v++;if(a.status==="done")dateMap[d].k+=(+a.kg||0);
+  });
+  const fechas=[];
+  const cur=new Date(fromDate+"T12:00:00"),endD=new Date(toDate+"T12:00:00");
+  while(cur<=endD){fechas.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+  let labels,vSerie,kSerie;
+  if(fechas.length>14){
+    const wMap={};
+    fechas.forEach(d=>{const dt=new Date(d+"T12:00:00");
+      const wk=dt.toLocaleDateString("es-CO",{month:"short",day:"numeric"});
+      if(!wMap[wk])wMap[wk]={v:0,k:0};
+      wMap[wk].v+=(dateMap[d]?.v||0);wMap[wk].k+=(dateMap[d]?.k||0);
+    });
+    labels=Object.keys(wMap);vSerie=labels.map(w=>wMap[w].v);kSerie=labels.map(w=>wMap[w].k);
+  }else{
+    labels=fechas.map(d=>new Date(d+"T12:00:00").toLocaleDateString("es-CO",{weekday:"short",day:"numeric"}));
+    vSerie=fechas.map(d=>dateMap[d]?.v||0);kSerie=fechas.map(d=>dateMap[d]?.k||0);
+  }
+  const maxV=Math.max(...vSerie,1),maxK=Math.max(...kSerie,1);
+  const tc={};done.forEach(a=>{if(a.tipo_v)tc[a.tipo_v]=(tc[a.tipo_v]||0)+1;});
+  const pMap2={};list.forEach(a=>{const k=a.prov_email||a.empresa_t||"Desconocido";pMap2[k]=(pMap2[k]||0)+1;});
+  const pData=Object.entries(pMap2).map(([p,c])=>({p:p.split("@")[0],c})).sort((a,b)=>b.c-a.c).slice(0,8);
+  const maxP=Math.max(...pData.map(d=>d.c),1);
+  const puntos=await getPuntosEntrega();
+  const pdOpts=puntos.filter(p=>p.activo).map(p=>`<option value="${p.id}"${pdFilter===p.id?" selected":""}>${p.nombre}</option>`).join("");
+  const btnGran=["dia","semana","mes"].map((gk,i)=>{
+    const lbl=["Día","Semana","Mes"][i];
+    const r=i===0?"6px 0 0 6px":i===2?"0 6px 6px 0":"0";
+    return`<button class="btn bsm ${granularidad===gk?"bp":""}" style="border-radius:${r}" onclick="setGranG('${gk}')">${lbl}</button>`;
+  }).join("");
+  g("mpg").innerHTML=`
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;flex-wrap:wrap">
+      <label style="color:var(--ink3);font-weight:600">Desde:</label>
+      <input type="date" class="fc" id="g-from" style="width:140px" value="${fromDate}">
+      <label style="color:var(--ink3);font-weight:600">Hasta:</label>
+      <input type="date" class="fc" id="g-to" style="width:140px" value="${toDate}">
+      ${pdOpts?`<select class="fc" id="g-pd" style="width:180px"
+        onchange="pgGraficos(document.getElementById('g-from').value,document.getElementById('g-to').value,window._granG)">
+        <option value="">Todos los PDV</option>${pdOpts}</select>`:""}
+    </div>
+    <div style="display:flex;gap:4px">
+      <div style="display:flex;gap:1px">${btnGran}</div>
+      <button class="btn bp bsm" onclick="pgGraficos(document.getElementById('g-from').value,document.getElementById('g-to').value,window._granG)">
+        <i class="ti ti-search"></i> Aplicar
+      </button>
+    </div>
+  </div>
+  <div class="g4" style="margin-bottom:16px">
+    <div class="metric m-blue"><div class="ml">Total período</div><div class="mv">${list.length}</div><div class="ms">${done.length} recibidos</div></div>
+    <div class="metric m-green"><div class="ml">Cajas</div><div class="mv">${totC.toLocaleString()}</div></div>
+    <div class="metric"><div class="ml">Kg</div><div class="mv">${totK.toLocaleString()}</div></div>
+    <div class="metric m-amber"><div class="ml">T. prom.</div><div class="mv">${avgV?avgV+" min":"--"}</div></div>
+  </div>
+  <div class="g2" style="margin-bottom:16px">
+    <div class="card"><div class="ct" style="margin-bottom:12px">Vehículos por fecha</div>
+      ${vSerie.every(v=>v===0)?`<div class="empty"><i class="ti ti-chart-bar"></i>Sin datos en este período</div>`:`
+      <div class="cbar" style="height:100px">${vSerie.map((n,i)=>`<div class="cbc" style="height:${Math.round(n/maxV*96)}px;background:var(--blue)" title="${labels[i]}: ${n}"></div>`).join("")}</div>
+      <div class="cblbl">${labels.map(l=>`<span>${l}</span>`).join("")}</div>`}
+    </div>
+    <div class="card"><div class="ct" style="margin-bottom:12px">Kilogramos por fecha</div>
+      ${kSerie.every(v=>v===0)?`<div class="empty"><i class="ti ti-chart-bar"></i>Sin datos en este período</div>`:`
+      <div class="cbar" style="height:100px">${kSerie.map((n,i)=>`<div class="cbc" style="height:${Math.round(n/maxK*96)}px;background:var(--green)" title="${labels[i]}: ${n.toLocaleString()} kg"></div>`).join("")}</div>
+      <div class="cblbl">${labels.map(l=>`<span>${l}</span>`).join("")}</div>`}
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct" style="margin-bottom:14px">Por tipo de vehículo</div>
+      ${Object.entries(tc).length?Object.entries(tc).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+          <span>${t||"No especificado"}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:80px;height:6px;background:var(--surface3);border-radius:3px">
+              <div style="height:100%;width:${done.length?Math.round(c/done.length*100):0}%;background:var(--blue);border-radius:3px"></div>
+            </div>
+            <span style="font-weight:700">${c}</span>
+          </div>
+        </div>`).join(""):`<div class="empty"><i class="ti ti-chart-bar"></i>Sin datos</div>`}
+    </div>
+    <div class="card"><div class="ct" style="margin-bottom:14px">Por proveedor</div>
+      ${pData.length?pData.map(d=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px">${d.p}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:80px;height:6px;background:var(--surface3);border-radius:3px">
+              <div style="height:100%;width:${Math.round(d.c/maxP*100)}%;background:var(--purple);border-radius:3px"></div>
+            </div>
+            <span style="font-weight:700">${d.c}</span>
+          </div>
+        </div>`).join(""):`<div class="empty">Sin datos</div>`}
+    </div>
+  </div>`;
+}
+function setGranG(gran){
+  window._granG=gran;
+  const hoy=new Date();let desde=new Date(hoy);
+  if(gran==="dia"){desde=new Date(hoy);}
+  else if(gran==="semana"){desde.setDate(hoy.getDate()-6);}
+  else if(gran==="mes"){desde.setDate(hoy.getDate()-29);}
+  pgGraficos(desde.toISOString().slice(0,10),hoy.toISOString().slice(0,10),gran);
+}
+async function pgCumpl(fromDate,toDate){
+  loading("Calculando cumplimiento…");
+  if(!fromDate||!toDate){
+    const hoy=new Date();toDate=hoy.toISOString().slice(0,10);
+    const desde=new Date(hoy);desde.setMonth(hoy.getMonth()-1);
+    fromDate=desde.toISOString().slice(0,10);
+  }
+  const pdFilter=document.getElementById("c-pd")?.value||"";
+  const all=await getAppointments({from:fromDate,to:toDate});
+  const list=pdFilter?all.filter(a=>(a.punto_entrega||"")===pdFilter):all;
+  const calcs=list.map(a=>({...a,...calcC(a)}));
+  const tot=list.length;
+  const cumpl=calcs.filter(a=>a.r==="ok"||a.r==="early").length;
+  const tard=calcs.filter(a=>a.r==="late").length;
+  const incumpl=calcs.filter(a=>a.r==="missed").length;
+  const dTard=calcs.filter(a=>a.r==="nodate").length;
+  const sinInfo=calcs.filter(a=>a.r==="sininfo").length;
+  const sinCita=list.filter(a=>a.sin_cita===true).length;
+  const conCita=tot-sinCita;
+  const pctSinCita=tot?Math.round(sinCita/tot*100):0;
+  const pctConCita=tot?Math.round(conCita/tot*100):0;
+  const colSinCita=pctSinCita===0?"var(--green)":pctSinCita<=20?"var(--amber)":"var(--red)";
+  const pct=tot?Math.round(cumpl/tot*100):0;
+  const col=pct>=80?"var(--green)":pct>=50?"var(--amber)":"var(--red)";
+  const puntos=await getPuntosEntrega();
+  const pdOpts=puntos.filter(p=>p.activo).map(p=>`<option value="${p.id}"${pdFilter===p.id?" selected":""}>${p.nombre}</option>`).join("");
+  const pMap={};puntos.forEach(p=>pMap[p.id]=p.nombre);
+  g("mpg").innerHTML=`
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;flex-wrap:wrap">
+      <label style="color:var(--ink3);font-weight:600">Desde:</label>
+      <input type="date" class="fc" id="c-from" style="width:140px" value="${fromDate}">
+      <label style="color:var(--ink3);font-weight:600">Hasta:</label>
+      <input type="date" class="fc" id="c-to" style="width:140px" value="${toDate}">
+      ${pdOpts?`<select class="fc" id="c-pd" style="width:180px"
+        onchange="pgCumpl(document.getElementById('c-from').value,document.getElementById('c-to').value)">
+        <option value="">Todos los PDV</option>${pdOpts}</select>`:""}
+      <button class="btn bp bsm" onclick="pgCumpl(document.getElementById('c-from').value,document.getElementById('c-to').value)">
+        <i class="ti ti-search"></i> Aplicar
+      </button>
+      <button class="btn bsm" onclick="pgCumpl()"><i class="ti ti-refresh"></i> Último mes</button>
+    </div>
+    <div style="font-size:11px;color:var(--ink3)">${tot} registros en período</div>
+  </div>
+  <div class="g4" style="margin-bottom:16px">
+    <div class="metric" style="border-left:4px solid ${col}">
+      <div class="ml">% Cumplimiento puntual</div><div class="mv" style="color:${col}">${pct}%</div>
+      <div class="ms">${cumpl} de ${tot} llegaron a tiempo</div>
+      <div class="pg-bar" style="margin-top:8px"><div class="pg-fill" style="width:${pct}%;background:${col}"></div></div>
+    </div>
+    <div class="metric" style="border-left:4px solid ${colSinCita}">
+      <div class="ml">Llegaron sin cita previa</div><div class="mv" style="color:${colSinCita}">${pctSinCita}%</div>
+      <div class="ms">${sinCita} sin cita · ${conCita} con cita</div>
+      <div class="pg-bar" style="margin-top:8px"><div class="pg-fill" style="width:${pctSinCita}%;background:${colSinCita}"></div></div>
+    </div>
+    <div class="metric"><div class="ml">Total registros</div><div class="mv">${tot}</div><div class="ms">${conCita} con cita · ${sinCita} sin cita</div></div>
+    <div class="metric m-red"><div class="ml">Incumplieron / No asistieron</div><div class="mv">${incumpl+dTard}</div><div class="ms">${dTard} fecha distinta · ${incumpl} no se presentaron</div></div>
+  </div>
+  <div class="g2" style="margin-bottom:16px">
+    <div class="card"><div class="ct" style="margin-bottom:12px">Resumen de cumplimiento</div>
+      <div style="font-size:12px">
+        ${[["Cumplieron a tiempo","b-ok",cumpl,"var(--green)"],["Tardaron (misma fecha)","b-lt",tard,"var(--amber)"],
+           ["Llegaron en fecha distinta","b-nd",dTard,"var(--red)"],["No se presentaron","b-mis",incumpl,"var(--red)"],
+           ["Sin información","b-sch",sinInfo,"var(--ink3)"]
+          ].map(([l,cls,n,c])=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+            <span class="bdg ${cls}" style="padding:2px 8px">${l}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:80px;height:5px;background:var(--surface3);border-radius:3px">
+                <div style="height:100%;width:${tot?Math.round(n/tot*100):0}%;background:${c};border-radius:3px"></div>
+              </div>
+              <span style="font-weight:700;min-width:24px;text-align:right">${n}</span>
+              <span style="font-size:10px;color:var(--ink3);min-width:32px">${tot?Math.round(n/tot*100):0}%</span>
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid ${colSinCita}">
+      <div class="ct" style="margin-bottom:4px">Proveedores sin cita previa</div>
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:14px">Llegadas no programadas en el período</div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
+        <div style="position:relative;width:72px;height:72px;flex-shrink:0">
+          <svg viewBox="0 0 36 36" style="width:72px;height:72px;transform:rotate(-90deg)">
+            <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--surface3)" stroke-width="3.5"/>
+            <circle cx="18" cy="18" r="15.9" fill="none" stroke="${colSinCita}" stroke-width="3.5"
+              stroke-dasharray="${pctSinCita} ${100-pctSinCita}" stroke-linecap="round"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${colSinCita}">${pctSinCita}%</div>
+        </div>
+        <div>
+          <div style="font-size:24px;font-weight:800;color:${colSinCita}">${sinCita}</div>
+          <div style="font-size:11px;color:var(--ink3)">proveedores sin cita</div>
+          <div style="font-size:11px;color:var(--green);margin-top:4px;font-weight:600">${conCita} con cita previa (${pctConCita}%)</div>
+        </div>
+      </div>
+      <div style="padding:8px 10px;border-radius:7px;font-size:11px;font-weight:500;
+        background:${pctSinCita===0?"var(--green-l)":pctSinCita<=20?"var(--amber-l)":"var(--red-l)"};
+        color:${colSinCita}">
+        <i class="ti ti-${pctSinCita===0?"circle-check":pctSinCita<=20?"alert-triangle":"alert-circle"}"></i>
+        ${pctSinCita===0?"Excelente — todos llegaron con cita previa.":
+          pctSinCita<=20?"Nivel aceptable — el "+(100-pctSinCita)+"% cumplió con el agendamiento.":
+          "Nivel crítico — más del 20% llegó sin cita previa."}
+      </div>
+    </div>
+  </div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <span class="ct">Detalle por registro</span>
+    <div style="display:flex;gap:6px">
+      <span class="bdg b-ok" style="padding:3px 9px">Con cita</span>
+      <span style="background:#FEF3C7;color:#92400E;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600">Sin cita previa</span>
+    </div>
+  </div>
+  <div class="tw"><table><thead><tr>
+    <th>OC</th><th>Conductor / Proveedor</th><th>PDV</th><th>Placa</th>
+    <th>Fecha cita</th><th>Hora cita</th><th>Fecha llegada</th><th>Hora llegada</th>
+    <th>Diferencia</th><th>Tipo</th><th>Resultado</th>
+  </tr></thead><tbody>
+  ${calcs.map(a=>`<tr style="${a.sin_cita?"background:#FFFBEB":""}">
+    <td>${a.oc}</td>
+    <td>${a.sin_cita?`<span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-right:4px">SC</span>`:""}${a.conductor||a.empresa_t||"—"}</td>
+    <td><span style="font-size:10px;background:var(--blue-l);color:var(--blue-d);padding:2px 6px;border-radius:4px">${pMap[a.punto_entrega]||a.punto_entrega||"—"}</span></td>
+    <td>${a.placa||"—"}</td>
+    <td>${fmtDate(a.f_cita)}</td><td>${fmtTime(a.h_cita)}</td>
+    <td>${a.fd}</td><td>${a.hd}</td><td>${a.diff}</td>
+    <td>${a.sin_cita?`<span style="background:#FEF3C7;color:#92400E;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600">Sin cita</span>`:`<span class="bdg b-sch">Con cita</span>`}</td>
+    <td><span class="bdg ${a.cls}">${a.lbl}</span></td>
+  </tr>`).join("")}
+  </tbody></table></div></div>`;
+}
+async function pgExportar(){
+  g('mpg').innerHTML=`
+  <div class="card" style="max-width:460px">
+    <div class="ct" style="margin-bottom:14px">Exportar citas</div>
+    <div class="g2"><div class="fg"><label class="fl">Desde</label><input type="date" class="fc" id="ex-from"></div><div class="fg"><label class="fl">Hasta</label><input type="date" class="fc" id="ex-to"></div></div>
+    <div class="fg"><label class="fl">Formato</label><select class="fc" id="ex-fmt"><option>CSV</option><option>Excel (.xlsx)</option></select></div>
+    <div style="font-size:11px;color:var(--ink3);padding:8px 12px;background:var(--surface2);border-radius:8px;margin-bottom:12px;border:1px solid var(--border)">
+      Columnas: OC · Proveedor · Conductor · Placa · Tipo · Empresa transp. · <b>Fecha cita</b> · Hora cita · <b>Fecha llegada</b> · Hora llegada · Diferencia · Muelle · Cajas · Kg · Estado · Cumplimiento
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn bp" onclick="prevEx()"><i class="ti ti-eye"></i> Vista previa</button>
+      <button class="btn bs" onclick="doEx()"><i class="ti ti-file-download"></i> Descargar</button>
+    </div>
+    <div id="ex-al"></div>
+  </div>
+  <div class="card" id="ex-prev" style="display:none"><div class="ch"><span class="ct">Vista previa <span class="ct-sub" id="ex-cnt"></span></span></div><div class="tw" id="ex-tbl"></div></div>`;
+}
+async function buildRows(){
+  const all=await getAppointments({});
+  return all.map(a=>{const c=calcC(a);return{'OC':a.oc,'Proveedor':a.prov_email?.split('@')[0]||'—','Conductor':a.conductor,'Placa':a.placa,'Tipo':a.tipo_v,'Empresa':a.empresa_t||'—','Fecha cita':a.f_cita,'Hora cita':a.h_cita,'Fecha llegada':c.fd,'Hora llegada':c.hd,'Diferencia':c.diff,'Muelle':a.muelle||'—','Cajas':a.cajas,'Kg':a.kg,'Estado':SL[a.status]||a.status,'Cumplimiento':c.lbl};});
+}
+async function prevEx(){
+  const rows=await buildRows();const p=g('ex-prev');p.style.display='block';
+  g('ex-cnt').textContent=rows.length+' registros';
+  const ks=Object.keys(rows[0]||{});
+  g('ex-tbl').innerHTML=`<table><thead><tr>${ks.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${ks.map(k=>`<td>${r[k]}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+async function doEx(){
+  const rows=await buildRows();const fmt=v('ex-fmt');
+  if(fmt==='Excel (.xlsx)'){
+    const ws=XLSX.utils.json_to_sheet(rows);
+    ws['!cols']=Object.keys(rows[0]||{}).map(()=>({wch:14}));
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Citas YMS');
+    XLSX.writeFile(wb,'YMS_Citas.xlsx');
+  }else{
+    const ks=Object.keys(rows[0]||{});
+    const csv='\uFEFF'+[ks.join(','),...rows.map(r=>ks.map(k=>`"${r[k]}"`).join(','))].join('\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='YMS_Citas.csv';a.click();URL.revokeObjectURL(url);
+  }
+  g('ex-al').innerHTML='<div class="al aok"><i class="ti ti-circle-check"></i>Archivo descargado.</div>';
+  setTimeout(()=>{const e=g('ex-al');if(e)e.innerHTML='';},3000);
+}
+
+/* ════════════════ INIT ════════════════ */
+// Al cargar, intentar reconectar con credenciales guardadas
+window.addEventListener('load',()=>{
+  const savedUrl=localStorage.getItem('yms_sb_url');
+  const savedKey=localStorage.getItem('yms_sb_key');
+  if(savedUrl&&savedKey){
+    g('cfg-url').value=savedUrl;
+    g('cfg-key').value=savedKey;
+  }
+});
+
+/* ── Puntos de entrega (stub simple) ── */
+async function getPuntosEntrega(){
+  const saved=localStorage.getItem('yms_puntos');
+  if(saved){try{return JSON.parse(saved);}catch(e){}}
+  if(!OFFLINE&&SB){
+    try{const{data}=await SB.from('puntos_entrega').select('*').order('nombre');
+      if(data&&data.length){localStorage.setItem('yms_puntos',JSON.stringify(data));return data;}
+    }catch(e){}
+  }
+  return[];
+}
+function getMuellesPD(){
+  const saved=localStorage.getItem('yms_muelles_pd');
+  const puntos=JSON.parse(localStorage.getItem('yms_puntos')||'[]');
+  const pMap={};puntos.forEach(p=>pMap[p.id]=p.nombre);
+  if(!saved)return[];
+  return JSON.parse(saved).map(m=>({...m,punto_nombre:pMap[m.punto_id]||''}));
+}
+async function pgPuntosEntrega(){
+  const puntos=await getPuntosEntrega();
+  const muelles=getMuellesPD();
+  const pMap={};puntos.forEach(p=>pMap[p.id]=p.nombre);
+  const pdSelOpts=puntos.filter(p=>p.activo)
+    .map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  g('mpg').innerHTML=`
+  <div class="g2">
+    <!-- Panel puntos de venta -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct">Puntos de venta (PDV)</span>
+        <button class="btn bp bsm" onclick="modalNuevoPunto()"><i class="ti ti-plus"></i> Nuevo punto</button>
+      </div>
+      <div id="al-pd"></div>
+      ${!puntos.length?'<div class="empty"><i class="ti ti-map-pin-off"></i>Sin puntos registrados. Use el botón para agregar.</div>':
+        puntos.map(p=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-weight:600;font-size:13px">${p.nombre}</div>
+            <div style="font-size:11px;color:${p.activo?'var(--green)':'var(--red)'};margin-top:2px">
+              ${p.activo?'● Activo':'○ Oculto'}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn bsm" title="${p.activo?'Ocultar':'Mostrar'}"
+              onclick="togglePunto('${p.id}',${!p.activo})">
+              <i class="ti ti-${p.activo?'eye-off':'eye'}"></i>
+            </button>
+            <button class="btn bd bsm" title="Eliminar punto"
+              onclick="if(confirm('¿Eliminar el punto ${p.nombre}? Esto también eliminará sus muelles.'))deletePuntoEntrega('${p.id}').then(pgPuntosEntrega)">
+              <i class="ti ti-trash"></i>
+            </button>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <!-- Panel muelles por punto -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct">Muelles por punto de venta</span>
+        <button class="btn bp bsm" onclick="modalNuevoMuelle()"><i class="ti ti-plus"></i> Nuevo muelle</button>
+      </div>
+      <div id="al-mu-pd"></div>
+      <!-- Filtro por punto -->
+      <div class="fg" style="margin-bottom:12px">
+        <label class="fl">Filtrar por punto de venta</label>
+        <select class="fc" id="mu-pd-filter" onchange="renderMuellesPanel()">
+          <option value="">Todos los puntos</option>${pdSelOpts}
+        </select>
+      </div>
+      <div id="muelles-pd-list">
+        ${!muelles.length?'<div class="empty"><i class="ti ti-door-off"></i>Sin muelles registrados. Use el botón para agregar.</div>':
+          muelles.map(m=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-weight:600;font-size:12px">${m.nombre}</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:1px">
+                ${pMap[m.punto_id]||m.punto_id||'—'} ·
+                <span style="color:${m.activo?'var(--green)':'var(--red)'}">${m.activo?'Activo':'Oculto'}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn bsm" title="${m.activo?'Ocultar':'Mostrar'}"
+                onclick="toggleMuelle('${m.id}',${!m.activo})">
+                <i class="ti ti-${m.activo?'eye-off':'eye'}"></i>
+              </button>
+              <button class="btn bd bsm" title="Eliminar muelle"
+                onclick="if(confirm('¿Eliminar el muelle ${m.nombre}?'))eliminarMuelle('${m.id}')">
+                <i class="ti ti-trash"></i>
+              </button>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  window._puntosCache2=puntos;
+}
+
+function renderMuellesPanel(){
+  const filter=document.getElementById('mu-pd-filter')?.value||'';
+  const muelles=getMuellesPD();
+  const puntos=JSON.parse(localStorage.getItem('yms_puntos')||'[]');
+  const pMap={};puntos.forEach(p=>pMap[p.id]=p.nombre);
+  const filtered=filter?muelles.filter(m=>m.punto_id===filter):muelles;
+  const el=document.getElementById('muelles-pd-list');if(!el)return;
+  el.innerHTML=!filtered.length
+    ?'<div class="empty"><i class="ti ti-door-off"></i>Sin muelles para este punto.</div>'
+    :filtered.map(m=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-weight:600;font-size:12px">${m.nombre}</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:1px">
+          ${pMap[m.punto_id]||m.punto_id||'—'} ·
+          <span style="color:${m.activo?'var(--green)':'var(--red)'}">${m.activo?'Activo':'Oculto'}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn bsm" onclick="toggleMuelle('${m.id}',${!m.activo})">
+          <i class="ti ti-${m.activo?'eye-off':'eye'}"></i>
+        </button>
+        <button class="btn bd bsm" onclick="if(confirm('¿Eliminar el muelle ${m.nombre}?'))eliminarMuelle('${m.id}')">
+          <i class="ti ti-trash"></i>
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleMuelle(id,activo){
+  const muelles=getMuellesPD();
+  const m=muelles.find(x=>x.id===id);
+  if(m){m.activo=activo;localStorage.setItem('yms_muelles_pd',JSON.stringify(muelles));pgPuntosEntrega();}
+}
+function eliminarMuelle(id){
+  const muelles=getMuellesPD().filter(m=>m.id!==id);
+  localStorage.setItem('yms_muelles_pd',JSON.stringify(muelles));pgPuntosEntrega();
+}
+
+function modalNuevoPunto(){
+  const m=document.createElement('div');
+  m.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  m.innerHTML=`<div style="background:#fff;border-radius:14px;padding:28px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Nuevo punto de entrega</div>
+    <div id="al-npd"></div>
+    <div class="fg"><label class="fl">Nombre *</label><input class="fc" id="npd-nombre" placeholder="Ej: Bodega Norte"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn bp" style="flex:1" onclick="guardarNuevoPunto()"><i class="ti ti-check"></i> Guardar</button>
+      <button class="btn" onclick="this.closest('[style*=fixed]').remove()">Cancelar</button>
+    </div></div>`;
+  document.body.appendChild(m);
+}
+async function guardarNuevoPunto(){
+  const nombre=(document.getElementById('npd-nombre')?.value||'').trim();
+  if(!nombre){const al=document.getElementById('al-npd');if(al)al.innerHTML='<div class="al aerr">El nombre es requerido.</div>';return;}
+  const punto={id:'pd-'+Date.now(),nombre,activo:true};
+  await savePuntoEntrega(punto);
+  document.querySelector('[style*=fixed]')?.remove();
+  pgPuntosEntrega();
+}
+async function savePuntoEntrega(punto){
+  const puntos=await getPuntosEntrega();
+  const idx=puntos.findIndex(p=>p.id===punto.id);
+  if(idx>=0)puntos[idx]=punto;else puntos.push(punto);
+  localStorage.setItem('yms_puntos',JSON.stringify(puntos));
+  if(!OFFLINE&&SB){try{await SB.from('puntos_entrega').upsert(punto);}catch(e){}}
+  return{ok:true};
+}
+async function deletePuntoEntrega(id){
+  const puntos=(await getPuntosEntrega()).filter(p=>p.id!==id);
+  localStorage.setItem('yms_puntos',JSON.stringify(puntos));
+  if(!OFFLINE&&SB){try{await SB.from('puntos_entrega').delete().eq('id',id);}catch(e){}}
+  return{ok:true};
+}
+async function togglePunto(id,activo){
+  const puntos=await getPuntosEntrega();
+  const p=puntos.find(x=>x.id===id);if(!p)return;
+  p.activo=activo;await savePuntoEntrega(p);pgPuntosEntrega();
+}
+async function pgRegistrarSinCita(){
+  const veh=['Moto','Automóvil','Van','NHR','TURBO','SENCILLO','TRACTO CAMION'].map(t=>`<option>${t}</option>`).join('');
+  const now=nowTime(),hoy=todayDate();
+  const modal=document.createElement('div');
+  modal.id='modal-sc';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:#fff;border-radius:14px;padding:28px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div><div style="font-size:15px;font-weight:700">Registrar proveedor sin cita</div>
+        <div style="font-size:11px;color:var(--ink3)">Llegada hoy: <b>${hoy}</b> a las <b>${now}</b></div></div>
+      <button onclick="document.getElementById('modal-sc').remove()" style="background:none;border:none;font-size:20px;color:var(--ink3);cursor:pointer">✕</button>
+    </div>
+    <div id="al-sc"></div>
+    <div class="g2" style="margin-bottom:12px">
+      <div class="fg"><label class="fl">N° Orden de compra *</label><input class="fc" id="sc-oc" placeholder="OC-2024-00123"></div>
+      <div class="fg"><label class="fl">Proveedor / Empresa *</label><input class="fc" id="sc-prov" placeholder="Empresa proveedora"></div>
+    </div>
+    <div class="g2" style="margin-bottom:12px">
+      <div class="fg"><label class="fl">Cajas</label><input type="number" class="fc" id="sc-cajas" placeholder="0" min="0"></div>
+      <div class="fg"><label class="fl">Kg</label><input type="number" class="fc" id="sc-kg" placeholder="0" min="0"></div>
+    </div>
+    <div class="g2" style="margin-bottom:12px">
+      <div class="fg"><label class="fl">Tipo vehículo</label><select class="fc" id="sc-tv"><option value="">Seleccione</option>${veh}</select></div>
+      <div class="fg"><label class="fl">Placa</label><input class="fc" id="sc-pla" placeholder="ABC-123"></div>
+    </div>
+    <div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;font-size:11px;color:#92400E;margin-bottom:16px">
+      <i class="ti ti-alert-triangle"></i> Este registro quedará marcado como "Sin cita" en reportes.
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn bp" style="flex:1" onclick="guardarSinCita('${hoy}','${now}')"><i class="ti ti-user-check"></i> Registrar llegada sin cita</button>
+      <button class="btn" onclick="document.getElementById('modal-sc').remove()">Cancelar</button>
+    </div></div>`;
+  document.body.appendChild(modal);
+}
+async function guardarSinCita(hoy,hora){
+  const oc=(document.getElementById('sc-oc')?.value||'').trim();
+  const prov=(document.getElementById('sc-prov')?.value||'').trim();
+  if(!oc||!prov){const al=document.getElementById('al-sc');if(al)al.innerHTML='<div class="al aerr">Ingrese OC y proveedor.</div>';return;}
+  const btn=document.querySelector('#modal-sc .bp');
+  if(btn){btn.disabled=true;btn.innerHTML='Guardando…';}
+  const cita={prov_email:ME.email,oc,f_cita:hoy,h_cita:hora,f_llegada:hoy,h_llegada:hora,
+    tipo_v:document.getElementById('sc-tv')?.value||'',
+    placa:document.getElementById('sc-pla')?.value||'',
+    conductor:'',celular:'',cajas:+(document.getElementById('sc-cajas')?.value||0),
+    kg:+(document.getElementById('sc-kg')?.value||0),tipo_entrega:'directo',empresa_t:prov,
+    status:'waiting',sin_cita:true,muelle:null,ini_desc:null,fin_desc:null,obs:'Sin cita: '+prov,factura:''};
+  const res=await saveAppointment(cita);
+  if(!res.ok){const al=document.getElementById('al-sc');if(al)al.innerHTML='<div class="al aerr">Error: '+(res.error?.message||'intente de nuevo')+'</div>';if(btn){btn.disabled=false;btn.innerHTML='Registrar llegada sin cita';}return;}
+  document.getElementById('modal-sc')?.remove();
+  pgLive();
+}
+function modalNuevoMuelle(){
+  const puntos=JSON.parse(localStorage.getItem('yms_puntos')||'[]').filter(p=>p.activo);
+  if(!puntos.length){alert('Primero cree al menos un punto de venta.');return;}
+  const pdOpts=puntos.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:#fff;border-radius:14px;padding:28px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:18px">Nuevo muelle</div>
+    <div class="fg"><label class="fl">Nombre del muelle *</label>
+      <input class="fc" id="nmu-nombre" placeholder="Ej: Muelle 1, Puerta Norte…">
+    </div>
+    <div class="fg"><label class="fl">Punto de venta *</label>
+      <select class="fc" id="nmu-pd"><option value="">Seleccione punto…</option>${pdOpts}</select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn bp" style="flex:1" onclick="guardarNuevoMuelle()"><i class="ti ti-check"></i> Guardar muelle</button>
+      <button class="btn" onclick="this.closest('[style*=fixed]').remove()">Cancelar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function guardarNuevoMuelle(){
+  const nombre=(document.getElementById('nmu-nombre')?.value||'').trim();
+  const pdId=document.getElementById('nmu-pd')?.value||'';
+  if(!nombre||!pdId){alert('Complete el nombre y el punto de venta.');return;}
+  const muelles=getMuellesPD();
+  muelles.push({id:'mu-'+Date.now(),nombre,punto_id:pdId,activo:true});
+  localStorage.setItem('yms_muelles_pd',JSON.stringify(muelles));
+  document.querySelector('[style*=fixed]')?.remove();
+  pgPuntosEntrega();
+}
+
+async function eliminarCita(id,oc){
+  if(!confirm('¿Eliminar permanentemente la cita '+oc+'?\nEsta acción no se puede deshacer.'))return;
+  if(OFFLINE){
+    DEMO.appointments=DEMO.appointments.filter(a=>String(a.id)!==String(id));
+    renderAllCitas();return;
+  }
+  // Convertir a número entero (appointments.id es SERIAL en PostgreSQL)
+  const numId=parseInt(id,10);
+  if(isNaN(numId)){alert('ID de cita inválido: '+id);return;}
+  const{error}=await SB.from('appointments').delete().eq('id',numId);
+  if(error){
+    alert('Error al eliminar: '+error.message);
+    console.error('eliminarCita error:',error);
+    return;
+  }
+  console.log('Cita eliminada: id='+numId+' oc='+oc);
+  renderAllCitas();
+}
+function enviarCorreoConfirmacion(email,oc,fecha,hora,tipo,placa,conductor){
+  const asunto=encodeURIComponent('YMS Pro - Cita confirmada: '+oc);
+  const lineas=['Estimado proveedor,','','Su cita fue registrada exitosamente en YMS Pro.',
+    '','DETALLES:','- Orden de compra: '+oc,'- Fecha: '+fecha,'- Hora: '+hora+' hrs',
+    tipo?'- Tipo: '+tipo:'',placa?'- Placa: '+placa:'',conductor?'- Conductor: '+conductor:'',
+    '','Por favor llegue puntualmente.','','YMS Pro'].filter(Boolean).join('\n');
+  window.open('mailto:'+email+'?subject='+asunto+'&body='+encodeURIComponent(lineas));
+}
+async function enviarCorreoSupabase(cita){
+  if(OFFLINE||!SB)return;
+  try{await SB.functions.invoke('send-confirmation-email',{body:{to:cita.prov_email,oc:cita.oc,fecha:cita.f_cita,hora:cita.h_cita,tipo_v:cita.tipo_v,placa:cita.placa,conductor:cita.conductor}});}
+  catch(e){console.log('Edge Function no configurada');}
+}
+
+</script>
+</body>
+</html>
